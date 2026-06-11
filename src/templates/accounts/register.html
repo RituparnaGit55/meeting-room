@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Register{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-10 col-lg-8">
+        <div class="glass-card-light p-5 fade-in-up">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; border-radius: 24px; background: var(--secondary-gradient);">
+                    <i class="bi bi-person-plus text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h2 class="text-gradient fw-bold">Create Account</h2>
+                <p class="text-muted mt-2">Join MeetFlow and start amazing meetings</p>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                {% if form.errors %}
+                    <div class="alert alert-danger fade-in-up delay-1">
+                        <strong>Please correct the errors below</strong>
+                    </div>
+                {% endif %}
+                
+                <div class="row mb-4 fade-in-up delay-2">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-person me-2"></i>First Name
+                        </label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-person me-2"></i>Last Name
+                        </label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}
+                            <div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="mb-4 fade-in-up delay-3">
+                    <label class="form-label">
+                        <i class="bi bi-envelope me-2"></i>Email Address
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                        <div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="row mb-4 fade-in-up delay-4">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-lock me-2"></i>Password
+                        </label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-lock-fill me-2"></i>Confirm Password
+                        </label>
+                        {{ form.password_confirm }}
+                        {% if form.password_confirm.errors %}
+                            <div class="text-danger small mt-1">{{ form.password_confirm.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="row mb-4 fade-in-up delay-4">
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-telephone me-2"></i>Phone
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                            <div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">
+                            <i class="bi bi-building me-2"></i>Department
+                        </label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                            <div class="text-danger small mt-1">{{ form.department.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-gradient-primary w-100 py-3 fs-5 fade-in-up delay-4">
+                    <i class="bi bi-person-plus me-2"></i>Create Account
+                </button>
+            </form>
+            
+            <div class="text-center mt-4 fade-in-up delay-4">
+                <span class="text-muted">Already have an account?</span>
+                <a href="{% url 'login' %}" class="ms-2 text-decoration-none fw-bold text-gradient">
+                    Sign In
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

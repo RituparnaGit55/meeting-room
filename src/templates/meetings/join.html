@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Join Meeting{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-10 col-lg-6">
+        <div class="glass-card-light p-5 fade-in-up">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; border-radius: 24px; background: var(--warning-gradient);">
+                    <i class="bi bi-door-open-fill text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h2 class="text-gradient fw-bold">Join Meeting</h2>
+                <p class="text-muted mt-2">Enter the room code to join</p>
+            </div>
+            
+            <form id="joinMeetingForm" class="fade-in-up delay-1">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-key me-2"></i>Room Code / Meeting ID
+                    </label>
+                    <input type="text" class="form-control" id="roomCode" name="roomCode" placeholder="Enter room code or meeting ID">
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-lock me-2"></i>Password (if required)
+                    </label>
+                    <input type="text" class="form-control" id="password" name="password" placeholder="Leave blank if none">
+                </div>
+
+                {% if not user.is_authenticated %}
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-person me-2"></i>Your Name
+                        </label>
+                        <input type="text" class="form-control" id="guestName" name="guestName" placeholder="Enter your name">
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn-gradient-warning w-100 py-3 fs-5">
+                    <i class="bi bi-door-open me-2"></i><strong style="color: red;">Join</strong> Meeting
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log('Join page loaded - updated');
+document.getElementById('joinMeetingForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const roomCode = document.getElementById('roomCode').value.trim();
+    console.log('Attempting to join room:', roomCode);
+    if (roomCode) {
+        window.location.href = `/meetings/room/${roomCode}/`;
+    } else {
+        alert('Please enter a room code');
+    }
+});
+</script>
+{% endblock %}

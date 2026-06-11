@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Create Meeting{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card-light p-4 fade-in-up">
+            <div class="text-center mb-3">
+                <div class="d-inline-flex align-items-center justify-content-center mb-2" style="width: 60px; height: 60px; border-radius: 18px; background: var(--success-gradient);">
+                    <i class="bi bi-calendar-check-fill text-white" style="font-size: 1.8rem;"></i>
+                </div>
+                <h2 class="text-gradient fw-bold m-0" style="font-size: 1.8rem;">Create Meeting</h2>
+                <p class="text-muted small m-0 mt-1">Set up your perfect meeting</p>
+            </div>
+            
+            <form id="createMeetingForm" class="fade-in-up delay-1">
+                {% csrf_token %}
+
+                <div id="createMeetingError" class="alert alert-danger rounded-4 d-none p-2 mb-3" role="alert"></div>
+                
+                <div class="row g-2">
+                    <!-- Title -->
+                    <div class="col-12">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-type me-1"></i>Meeting Title
+                        </label>
+                        <input type="text" class="form-control" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="title" name="title" required placeholder="Enter meeting title">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-card-text me-1"></i>Description
+                        </label>
+                        <textarea class="form-control" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="description" name="description" rows="1" placeholder="Enter meeting description (optional)"></textarea>
+                    </div>
+
+                    <!-- Meeting Type -->
+                    <div class="col-sm-6">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-gear me-1"></i>Meeting Type
+                        </label>
+                        <select class="form-select" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="meetingType" name="meetingType">
+                            <option value="INSTANT" selected>Instant Meeting (Start Now)</option>
+                            <option value="SCHEDULED">Scheduled Meeting</option>
+                            <option value="RECURRING">Recurring Meeting</option>
+                        </select>
+                    </div>
+
+                    <!-- Duration -->
+                    <div class="col-sm-6">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-hourglass-split me-1"></i>Duration (minutes)
+                        </label>
+                        <input type="number" class="form-control" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="duration" name="duration" value="60" min="10" max="480">
+                    </div>
+
+                    <!-- Start Time -->
+                    <div class="col-sm-6" id="dateTimeField" style="display: none;">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-clock me-1"></i>Start Time
+                        </label>
+                        <input type="datetime-local" class="form-control" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="startTime" name="startTime">
+                    </div>
+
+                    <!-- Password -->
+                    <div class="col-sm-6" id="passwordField">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-key me-1"></i>Password (optional)
+                        </label>
+                        <input type="text" class="form-control" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="password" name="password" placeholder="Leave blank for none">
+                    </div>
+
+                    <!-- Recurrence -->
+                    <div class="col-sm-6" id="recurrenceField" style="display: none;">
+                        <label class="form-label mb-1 small fw-semibold">
+                            <i class="bi bi-arrow-repeat me-1"></i>Recurrence
+                        </label>
+                        <select class="form-select" style="min-height: 15px; padding: 4px 10px; font-size: 0.9rem; border-radius: 8px;" id="recurrence" name="recurrence">
+                            <option value="NONE">None</option>
+                            <option value="DAILY">Daily</option>
+                            <option value="WEEKLY">Weekly</option>
+                            <option value="MONTHLY">Monthly</option>
+                        </select>
+                    </div>
+
+                    <!-- Waiting Room -->
+                    <div class="col-12 mt-2">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="waitingRoom" name="waitingRoom">
+                            <label class="form-check-label small fw-semibold" for="waitingRoom" style="color: var(--text-dark);">
+                                <i class="bi bi-people-fill me-1"></i>Enable Waiting Room
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="createMeetingSubmit" class="btn-gradient-success w-100 py-2 fs-6 mt-3" style="min-height: 46px; border-radius: 12px;">
+                    <i class="bi bi-calendar-check me-2"></i>Create & Join Meeting
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const meetingTypeSelect = document.getElementById('meetingType');
+const dateTimeField = document.getElementById('dateTimeField');
+const recurrenceField = document.getElementById('recurrenceField');
+const createMeetingForm = document.getElementById('createMeetingForm');
+const createMeetingError = document.getElementById('createMeetingError');
+const createMeetingSubmit = document.getElementById('createMeetingSubmit');
+
+function showCreateMeetingError(message) {
+    createMeetingError.textContent = message;
+    createMeetingError.classList.remove('d-none');
+}
+
+function clearCreateMeetingError() {
+    createMeetingError.textContent = '';
+    createMeetingError.classList.add('d-none');
+}
+
+meetingTypeSelect.addEventListener('change', function() {
+    if (this.value === 'INSTANT') {
+        dateTimeField.style.display = 'none';
+        recurrenceField.style.display = 'none';
+    } else if (this.value === 'RECURRING') {
+        dateTimeField.style.display = 'block';
+        recurrenceField.style.display = 'block';
+    } else {
+        dateTimeField.style.display = 'block';
+        recurrenceField.style.display = 'none';
+    }
+});
+
+createMeetingForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearCreateMeetingError();
+    createMeetingSubmit.disabled = true;
+    
+    const data = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        meeting_type: document.getElementById('meetingType').value,
+        duration: parseInt(document.getElementById('duration').value),
+        password: document.getElementById('password').value,
+        enable_waiting_room: document.getElementById('waitingRoom').checked,
+        recurrence_pattern: document.getElementById('recurrence').value
+    };
+
+    // Always set start_time (required for backend)
+    if (document.getElementById('meetingType').value === 'INSTANT') {
+        data.start_time = new Date().toISOString(); // Now for instant meetings
+    } else {
+        const dateValue = document.getElementById('startTime').value;
+        if (dateValue) {
+            data.start_time = new Date(dateValue).toISOString();
+        } else {
+            // Fallback if no time set for scheduled
+            data.start_time = new Date().toISOString();
+        }
+    }
+
+    try {
+        console.log('Creating meeting with data:', data);
+        const response = await fetch('/meetings/api/', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (response.status === 401 || response.status === 403) {
+            window.location.href = "{% url 'login' %}";
+            return;
+        }
+
+        const isJsonResponse = (response.headers.get('content-type') || '').includes('application/json');
+        const result = isJsonResponse ? await response.json() : null;
+        console.log('Response:', response.status, result);
+        if (response.ok) {
+            window.location.href = `/meetings/room/${result.room_code}/`;
+        } else {
+            const message = result && typeof result === 'object'
+                ? (result.detail || result.error || Object.values(result).flat().join(' '))
+                : 'Could not create meeting. Please check the form and try again.';
+            showCreateMeetingError(message);
+        }
+    } catch (error) {
+        console.error('Error creating meeting:', error);
+        showCreateMeetingError('Unable to create the meeting right now. Please refresh and try again.');
+    } finally {
+        createMeetingSubmit.disabled = false;
+    }
+});
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+{% endblock %}

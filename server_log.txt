@@ -1,0 +1,5 @@
+Changed directory to: C:\Users\ritup\OneDrive\Desktop\meeting_sw\src
+Python path: ['C:\\Users\\ritup\\OneDrive\\Desktop\\meeting_sw\\src', 'C:\\Users\\ritup\\OneDrive\\Desktop\\meeting_sw', 'C:\\Users\\ritup\\AppData\\Local\\Python\\pythoncore-3.14-64\\python314.zip', 'C:\\Users\\ritup\\AppData\\Local\\Python\\pythoncore-3.14-64\\DLLs', 'C:\\Users\\ritup\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib', 'C:\\Users\\ritup\\AppData\\Local\\Python\\pythoncore-3.14-64', 'C:\\Users\\ritup\\AppData\\Local\\Python\\pythoncore-3.14-64\\Lib\\site-packages']
+Set DJANGO_SETTINGS_MODULE
+Imported Django management
+Starting Django server...

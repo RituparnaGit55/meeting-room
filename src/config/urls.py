@@ -1,0 +1,48 @@
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import redirect, render
+from django.http import JsonResponse
+
+def dashboard_view(request):
+    if not request.user.is_authenticated:
+        return redirect("login")
+    return render(request, "meetings/dashboard.html")
+
+def test_auth_view(request):
+    return JsonResponse({
+        "authenticated": request.user.is_authenticated,
+        "user": str(request.user) if request.user.is_authenticated else None
+    })
+
+urlpatterns = [
+    path("admin/", admin.site.urls),
+    # Web URLs first
+    path("auth/", include("apps.accounts.urls")),
+    path("meetings/", include("apps.meetings.urls")),
+    # API URLs (namespaced)
+    path("api/v1/auth/", include(("apps.accounts.urls", "accounts-api"), namespace="accounts-api")),
+    path("api/v1/meetings/", include(("apps.meetings.urls", "meetings-api"), namespace="meetings-api")),
+    path("test-auth/", test_auth_view, name="test-auth"),
+    # path("api/v1/participants/", include("apps.participants.urls")),
+    # path("api/v1/chat/", include("apps.chat.urls")),
+    # path("api/v1/recordings/", include("apps.recordings.urls")),
+    # path("api/v1/transcripts/", include("apps.transcripts.urls")),
+    # path("api/v1/summaries/", include("apps.summaries.urls")),
+    # path("api/v1/tasks/", include("apps.tasks.urls")),
+    # path("api/v1/notifications/", include("apps.notifications.urls")),
+    # path("api/v1/analytics/", include("apps.analytics.urls")),
+    # path("api/v1/webhooks/", include("apps.webhooks.urls")),
+    # path("api/v1/api_keys/", include("apps.api_keys.urls")),
+    # path("api/v1/dashboard/", include("apps.dashboard.urls")),
+    path("", lambda request: redirect("meeting-dashboard" if request.user.is_authenticated else "login")),
+    path("dashboard/", dashboard_view, name="dashboard"),
+]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    if "debug_toolbar" in settings.INSTALLED_APPS:
+        import debug_toolbar
+        urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns

@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Login{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75" style="min-height: 80vh;">
+    <div class="col-md-8 col-lg-6">
+        <div class="glass-card-light p-5 fade-in-up">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; border-radius: 24px; background: var(--primary-gradient);">
+                    <i class="bi bi-camera-video text-white" style="font-size: 2.5rem;"></i>
+                </div>
+                <h2 class="text-gradient fw-bold">Welcome Back!</h2>
+                <p class="text-muted mt-2">Sign in to continue your meetings</p>
+            </div>
+            
+            {% if form.errors %}
+                <div class="alert alert-danger fade-in-up delay-1">
+                    {% for field in form %}
+                        {% for error in field.errors %}
+                            {{ error }}
+                        {% endfor %}
+                    {% endfor %}
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <form method="post" class="fade-in-up delay-2">
+                {% csrf_token %}
+                
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-envelope me-2"></i>Email Address
+                    </label>
+                    {{ form.email }}
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label">
+                        <i class="bi bi-lock me-2"></i>Password
+                    </label>
+                    {{ form.password }}
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="remember">
+                        <label class="form-check-label" for="remember" style="color: var(--text-dark);">Remember Me</label>
+                    </div>
+                    <a href="{% url 'forgot-password' %}" class="text-decoration-none text-gradient fw-semibold">
+                        Forgot Password?
+                    </a>
+                </div>
+                
+                <button type="submit" class="btn-gradient-primary w-100 py-3 fs-5">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                </button>
+            </form>
+            
+            <div class="text-center mt-4 fade-in-up delay-3">
+                <span class="text-muted">Don't have an account?</span>
+                <a href="{% url 'register' %}" class="ms-2 text-decoration-none fw-bold text-gradient">
+                    Create Account
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

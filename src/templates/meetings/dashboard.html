@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Premium Meetings{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="container-fluid px-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 fade-in-up">
+                <div class="mb-4">
+                    <span class="badge rounded-pill px-4 py-2" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30; color: #667eea; font-weight: 600; font-size: 0.9rem;">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i>
+                        Next-gen Video Meetings
+                    </span>
+                </div>
+                
+                <h1 class="hero-title">
+                Experience Meetings<br>
+                Reimagined for <span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Modern Teams</span>
+            </h1>
+                
+                <p class="hero-subtitle">
+                    MeetFlow transforms how teams connect with crystal-clear video, 
+                    AI-powered features, and seamless collaboration - all wrapped in 
+                    a beautiful, intuitive interface.
+                </p>
+                
+                <div class="d-flex gap-3 mb-5 flex-wrap">
+                    <a href="{% url 'create-meeting' %}" class="btn-primary-custom d-flex align-items-center">
+                        <i class="bi bi-video-camera me-2"></i>
+                        Start Free Meeting
+                    </a>
+                    <div class="join-input-group d-flex rounded-3">
+                        <input type="text" class="join-input flex-grow-1 border-0" id="joinCodeInput" placeholder="Enter meeting code">
+                        <a href="{% url 'join-meeting-page' %}" class="btn-join"><strong>Join</strong></a>
+                    </div>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="d-flex flex-wrap gap-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill fs-4" style="color: #10b981;"></i>
+                        <span class="fw-semibold" style="color: var(--text-secondary);">End-to-end encrypted</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill fs-4" style="color: #3b82f6;"></i>
+                        <span class="fw-semibold" style="color: var(--text-secondary);">Up to 100 participants</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 fade-in-up delay-2">
+                <div class="text-center">
+                    <div class="d-inline-block position-relative">
+                        <div class="meeting-image-card">
+                            <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop&crop=face" alt="Meeting" class="rounded-3" style="width: 100%; max-width: 540px;">
+                        </div>
+                        
+                        <div class="position-absolute" style="top: 20px; left: -20px;">
+                            <div class="live-badge">
+                                <span class="live-dot"></span>
+                                LIVE NOW
+                            </div>
+                        </div>
+                        
+                        <div class="position-absolute" style="bottom: 20px; right: -20px;">
+                            <div class="d-flex align-items-center gap-3 bg-white rounded-3 px-4 py-3 shadow-lg">
+                                <div class="d-flex -ms-2">
+                                    <div class="joined-avatar" style="z-index: 3;">JD</div>
+                                    <div class="joined-avatar ms-n3" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); z-index: 2;">MK</div>
+                                    <div class="joined-avatar ms-n3" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); z-index: 1;">SJ</div>
+                                </div>
+                                <div class="text-start">
+                                    <div class="fw-bold" style="font-size: 0.85rem; color: var(--text-dark);">+12 participants</div>
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Active now</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="position-absolute" style="top: 50%; right: -30px; transform: translateY(-50%);">
+                            <div class="bg-white rounded-2 px-3 py-2 shadow-lg d-flex align-items-center gap-2" style="animation: float 3s ease-in-out infinite;">
+                                <i class="bi bi-chat-dots-fill" style="color: #8b5cf6; font-size: 1.2rem;"></i>
+                                <span class="fw-semibold" style="font-size: 0.8rem; color: var(--text-dark);">Great idea!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid px-4 mb-5">
+    <div class="text-center mb-5 fade-in-up">
+        <h2 class="fw-bold" style="font-size: 2.2rem; color: var(--text-dark);">Everything You Need</h2>
+        <p class="text-muted mt-2" style="font-size: 1.1rem;">Powerful features for seamless collaboration</p>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-lg-6 fade-in-up delay-1">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-lock text-white"></i>
+                </div>
+                <div class="feature-title">Enterprise-Grade Security</div>
+                <p class="feature-desc">
+                    Your meetings are protected with end-to-end encryption and enterprise-level security protocols. Your privacy is our priority.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 fade-in-up delay-2">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-people text-white"></i>
+                </div>
+                <div class="feature-title">Scale with Confidence</div>
+                <p class="feature-desc">
+                    Host up to 100 participants with crystal-clear video quality, perfect for teams of all sizes and important meetings.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 fade-in-up delay-3">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-phone text-white"></i>
+                </div>
+                <div class="feature-title">Device Agnostic</div>
+                <p class="feature-desc">
+                    Join from anywhere on any device - browser, mobile, or desktop. Your meetings go where you go.
+                </p>
+            </div>
+        </div>
+        
+        <div class="col-lg-6 fade-in-up delay-4">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="bi bi-magic text-white"></i>
+                </div>
+                <div class="feature-title">AI-Powered Collaboration</div>
+                <p class="feature-desc">
+                    Share screens, chat in real-time, and use advanced collaboration features to bring your team together effortlessly.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    <div class="container-fluid px-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="footer-links d-flex gap-4 align-items-center">
+                <span class="fw-bold" style="background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MeetFlow</span>
+                <a href="#">Privacy</a>
+                <a href="#">Terms</a>
+                <a href="#">Help Center</a>
+            </div>
+            <div class="footer-copyright">
+                © 2024 MeetFlow Communications. All rights reserved.
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+@keyframes float {
+    0%, 100% { transform: translateY(-50%) translateY(0px); }
+    50% { transform: translateY(-50%) translateY(-10px); }
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+console.log('Dashboard page loaded - updated v2');
+</script>
+{% endblock %}
