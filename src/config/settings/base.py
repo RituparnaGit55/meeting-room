@@ -11,7 +11,11 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-placeholder-key-change-me"
 
 DEBUG = True
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = [
+    ".vercel.app",
+    "localhost",
+    "127.0.0.1",
+]
 
 AUTH_USER_MODEL = "accounts.User"
 
@@ -195,3 +199,4 @@ CHANNEL_LAYERS = {
 # CELERY_TIMEZONE = "UTC"
 
 LOGIN_URL = "/auth/login/"
+
