@@ -154,6 +154,10 @@ nav {
     padding: 0 1.5rem;
     font-size: 1rem;
     transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
 .btn-join:hover {

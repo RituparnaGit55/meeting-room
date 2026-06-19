@@ -9,6 +9,8 @@ class Meeting(models.Model):
         ("INSTANT", "Instant Meeting"),
         ("SCHEDULED", "Scheduled Meeting"),
         ("RECURRING", "Recurring Meeting"),
+        ("LINK_GENERATION", "Meeting Link Generation"),
+        ("ID_GENERATION", "Meeting ID Generation"),
     ]
     STATUS_CHOICES = [
         ("SCHEDULED", "Scheduled"),
@@ -89,3 +91,18 @@ class MeetingParticipant(models.Model):
         if self.user:
             return f"{self.user.email} - {self.meeting.title}"
         return f"{self.guest_name} - {self.meeting.title}"
+
+
+class MeetingRecording(models.Model):
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="recordings")
+    started_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    file = models.FileField(upload_to="meeting_recordings/")
+    recording_type = models.CharField(max_length=20)  # e.g., 'video', 'audio', 'screen'
+    file_size = models.BigIntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Recording ({self.recording_type}) for {self.meeting.title} at {self.created_at}"

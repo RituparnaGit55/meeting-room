@@ -5,7 +5,14 @@
 {% block content_container_class %}{% endblock %}
 
 {% block content %}
-<div class="meeting-room" style="min-height: calc(100vh - 76px); padding: 1rem;">
+<div class="meeting-room position-relative" style="min-height: calc(100vh - 76px); padding: 1rem;">
+    <!-- Waiting Room Overlay -->
+    {% if participant_status == 'WAITING' %}
+    <div id="waitingRoomOverlay" class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center" style="background: rgba(0,0,0,0.9); z-index: 1050;">
+        <i class="bi bi-hourglass-split display-1 text-light mb-4"></i>
+        <h2 class="text-light text-center">Please wait, the meeting host will let you in soon.</h2>
+    </div>
+    {% endif %}
     <div class="row g-4" style="height: calc(100vh - 180px);">
         <div class="col-lg-9">
             <div class="row g-3 h-100">
@@ -29,32 +36,159 @@
             </div>
         </div>
         <div class="col-lg-3">
-            <div class="glass-card h-100 p-3">
-                <!-- Room Code Panel -->
-                <div class="mb-4 p-3 rounded" style="background: rgba(255,255,255,0.08);">
-                    <h6 class="fw-semibold mb-3" style="color: white;"><i class="bi bi-key me-2"></i>Meeting Room Code</h6>
-                    <div class="d-flex gap-2">
-                        <input type="text" class="form-control form-control-sm" id="roomCodeDisplay" 
-                               value="{{ room_code }}" readonly
-                               style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white;">
-                        <button class="btn btn-sm btn-light" onclick="copyRoomCode()" title="Copy Code">
-                            <i class="bi bi-clipboard"></i>
-                        </button>
-                    </div>
-                    <small class="text-light mt-2 d-block opacity-75">Share this code with others to join!</small>
-                </div>
+            <div class="glass-card h-100 p-3 d-flex flex-column">
+                <!-- Tabs -->
+                <ul class="nav nav-pills nav-fill mb-3" id="sidebarTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="participants-tab" data-bs-toggle="pill" data-bs-target="#participantsPanel" type="button" role="tab" style="color: white; font-size: 0.9rem;">Participants</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="chat-tab" data-bs-toggle="pill" data-bs-target="#chatPanel" type="button" role="tab" style="color: white; font-size: 0.9rem;">Chat</button>
+                    </li>
+                </ul>
 
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0" style="color: white;"><i class="bi bi-people-fill me-2"></i>Participants</h5>
-                    <span class="badge rounded-pill px-3 py-2" style="background: var(--primary-gradient);" id="participantCount">1</span>
-                </div>
-                <div id="participantList">
-                    <div class="d-flex align-items-center p-2 mb-2 rounded" style="background: rgba(255,255,255,0.1);">
-                        <i class="bi bi-person-circle me-2 fs-3" style="color: #667eea;"></i>
-                        <div class="flex-grow-1">
-                            <p class="fw-semibold mb-0" style="color: white;">{{ user.first_name|default:user.email }}</p>
+                <div class="tab-content flex-grow-1 overflow-hidden d-flex flex-column" id="sidebarTabsContent">
+                    <!-- Participants Panel -->
+                    <div class="tab-pane fade show active h-100 overflow-auto" id="participantsPanel" role="tabpanel">
+
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="fw-bold mb-0" style="color: white;"><i class="bi bi-people-fill me-2"></i>Participants</h5>
+                            <span class="badge rounded-pill px-3 py-2" style="background: var(--primary-gradient);" id="participantCount">{{ participants|length }}</span>
                         </div>
-                        <span class="badge bg-success" style="background: var(--success-gradient);">You</span>
+                        <div id="participantList">
+                            {% for p in participants %}
+                                {% if p.status == 'JOINED' or p.status == 'WAITING' and is_host %}
+                                <div class="d-flex align-items-center p-2 mb-2 rounded participant-item" id="participant-{{ p.id }}" style="background: rgba(255,255,255,0.1);">
+                                    <i class="bi bi-person-circle me-2 fs-3" style="color: #667eea;"></i>
+                                    <div class="flex-grow-1">
+                                        <p class="fw-semibold mb-0" style="color: white; font-size: 0.9rem;">
+                                            {% if p.user %}
+                                                {{ p.user.first_name|default:p.user.email }}
+                                            {% else %}
+                                                {{ p.guest_name|default:"Guest" }}
+                                            {% endif %}
+                                        </p>
+                                        <div class="d-flex gap-1" style="font-size: 0.75rem;">
+                                            <i class="bi {% if p.is_audio_on %}bi-mic-fill text-success{% else %}bi-mic-mute-fill text-danger{% endif %}" id="mic-icon-{{ p.id }}"></i>
+                                            <i class="bi {% if p.is_video_on %}bi-camera-video-fill text-success{% else %}bi-camera-video-off-fill text-danger{% endif %}" id="vid-icon-{{ p.id }}"></i>
+                                            <i class="bi bi-hand-index-thumb-fill text-warning {% if not p.has_raised_hand %}d-none{% endif %}" id="hand-icon-{{ p.id }}"></i>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center gap-1">
+                                        {% if p.status == 'WAITING' %}
+                                            <span class="badge bg-warning me-1">Waiting</span>
+                                            {% if is_host %}
+                                                <button class="btn btn-sm btn-success p-1" id="btn-admit-{{ p.id }}" onclick="admitParticipant(this.id.split('-').pop())" title="Admit"><i class="bi bi-check-lg"></i></button>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if p.id == participant_id %}
+                                                <span class="badge bg-success" style="background: var(--success-gradient);">You</span>
+                                            {% endif %}
+                                        {% endif %}
+                                        
+                                        {% if is_host and p.id != participant_id %}
+                                            <button class="btn btn-sm btn-danger p-1" id="btn-remove-{{ p.id }}" onclick="removeParticipant(this.id.split('-').pop())" title="Remove"><i class="bi bi-x-lg"></i></button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <!-- Room Code Panel -->
+                        <div class="mt-4 mb-4 p-3 rounded shadow-sm" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <h6 class="fw-bold mb-3 text-uppercase tracking-wider" style="color: rgba(255, 255, 255, 0.9); font-size: 0.8rem; letter-spacing: 1px;">
+                                <i class="bi bi-share-fill me-2 text-info"></i>Share Meeting
+                            </h6>
+                            
+                            <!-- Meeting Link -->
+                            <div class="mb-3">
+                                <label class="form-label small mb-1" style="color: rgba(255, 255, 255, 0.6); font-size: 0.75rem;">Meeting Link</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="meetingLinkDisplay" readonly
+                                           style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.8rem; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copyMeetingLink()" id="btnCopyLink" title="Copy Link"
+                                            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-top-right-radius: 8px; border-bottom-right-radius: 8px; color: #fff; transition: all 0.2s ease;">
+                                        <i class="bi bi-link-45deg"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Room Code -->
+                            <div class="mb-3">
+                                <label class="form-label small mb-1" style="color: rgba(255, 255, 255, 0.6); font-size: 0.75rem;">Room Code</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="roomCodeDisplay" value="{{ room_code }}" readonly
+                                           style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.8rem; font-family: monospace; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copyRoomCode()" id="btnCopyCode" title="Copy Code"
+                                            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-top-right-radius: 8px; border-bottom-right-radius: 8px; color: #fff; transition: all 0.2s ease;">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Meeting ID -->
+                            {% if meeting_id %}
+                            <div class="mb-2">
+                                <label class="form-label small mb-1" style="color: rgba(255, 255, 255, 0.6); font-size: 0.75rem;">Meeting ID</label>
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="meetingIdDisplay" value="{{ meeting_id }}" readonly
+                                           style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff; font-size: 0.8rem; font-family: monospace; border-top-left-radius: 8px; border-bottom-left-radius: 8px;">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="copyMeetingId()" id="btnCopyId" title="Copy ID"
+                                            style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-top-right-radius: 8px; border-bottom-right-radius: 8px; color: #fff; transition: all 0.2s ease;">
+                                        <i class="bi bi-clipboard"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Chat Panel -->
+                    <div class="tab-pane fade h-100 d-flex flex-column position-relative" id="chatPanel" role="tabpanel">
+                        <div class="chat-header mb-2 d-flex justify-content-between align-items-center">
+                            <select class="form-select form-select-sm" id="chatTargetSelector" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                <option value="all">Everyone</option>
+                                {% for p in participants %}
+                                    {% if p.id != participant_id and p.status == 'JOINED' %}
+                                    <option value="{{ p.user.id|default:0 }}" data-pid="{{ p.id }}">
+                                        {% if p.user %}{{ p.user.first_name|default:p.user.email }}{% else %}{{ p.guest_name|default:"Guest" }}{% endif %}
+                                    </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="chat-messages flex-grow-1 overflow-auto mb-3 pe-2 d-flex flex-column gap-2" id="chatMessages">
+                            <!-- Messages go here -->
+                        </div>
+                        <div class="chat-input-area mt-auto position-relative">
+                            <!-- Emoji picker container -->
+                            <div id="emojiPickerContainer" style="display: none; position: absolute; bottom: 100%; right: 0; z-index: 1000; margin-bottom: 5px;"></div>
+                            
+                            <!-- File preview area -->
+                            <div id="filePreviewArea" class="mb-2" style="display: none;">
+                                <div class="d-flex align-items-center justify-content-between p-2 rounded" style="background: rgba(255,255,255,0.1);">
+                                    <span id="filePreviewName" class="text-light small text-truncate me-2"></span>
+                                    <button class="btn btn-sm btn-link text-danger p-0" id="btnRemoveFile"><i class="bi bi-x-circle"></i></button>
+                                </div>
+                            </div>
+                            
+                            <div class="input-group input-group-sm">
+                                <button class="btn btn-outline-secondary" type="button" id="btnEmojiToggle" title="Emoji" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
+                                <button class="btn btn-outline-secondary" type="button" id="btnAttachment" title="Attach File" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); border-left: none; color: #fff;">
+                                    <i class="bi bi-paperclip"></i>
+                                </button>
+                                <input type="file" id="fileUploadInput" style="display: none;" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
+                                <input type="text" class="form-control" id="chatInputMsg" placeholder="Type a message..." style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #fff;">
+                                <button class="btn" style="background: var(--primary-gradient); color: white;" type="button" id="btnSendMsg">
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -75,15 +209,88 @@
             <button class="control-btn" id="toggleHand" title="Raise Hand">
                 <i class="bi bi-hand-index-thumb" id="handIcon"></i>
             </button>
+            <button class="control-btn" id="toggleRecord" title="Record Meeting" data-bs-toggle="modal" data-bs-target="#recordModal">
+                <i class="bi bi-record-circle" id="recordBtnIcon"></i>
+            </button>
             <button class="control-btn danger" id="leaveMeeting" title="Leave Meeting">
                 <i class="bi bi-telephone-x-fill"></i>
             </button>
         </div>
     </div>
+    </div>
 </div>
+
+<!-- Record Meeting Modal -->
+<div class="modal fade" id="recordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-light" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="modal-header border-0">
+                <h5 class="modal-title"><i class="bi bi-record-circle text-danger me-2"></i>Start Recording</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="small text-muted mb-4">Choose what you want to record. The recording will be saved locally to your computer when you stop.</p>
+                <div class="d-grid gap-3">
+                    <button class="btn btn-outline-light d-flex align-items-center p-3" onclick="startRecording('video')">
+                        <i class="bi bi-camera-video fs-4 me-3"></i>
+                        <div class="text-start">
+                            <strong class="d-block">Video & Audio</strong>
+                            <small class="opacity-75">Record your camera and microphone</small>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-light d-flex align-items-center p-3" onclick="startRecording('screen')">
+                        <i class="bi bi-display fs-4 me-3"></i>
+                        <div class="text-start">
+                            <strong class="d-block">Screen & Audio</strong>
+                            <small class="opacity-75">Record your screen and microphone</small>
+                        </div>
+                    </button>
+                    <button class="btn btn-outline-light d-flex align-items-center p-3" onclick="startRecording('audio')">
+                        <i class="bi bi-mic fs-4 me-3"></i>
+                        <div class="text-start">
+                            <strong class="d-block">Audio Only</strong>
+                            <small class="opacity-75">Record only your microphone</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recording Floating Status -->
+<div id="recordingStatusContainer" class="position-fixed top-0 start-50 translate-middle-x mt-3 rounded-pill shadow-lg align-items-center px-4 py-2" style="background: rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); display: none !important; z-index: 1050; gap: 1rem;">
+    <div class="d-flex align-items-center" style="color: #ef4444;">
+        <i class="bi bi-circle-fill me-2" style="font-size: 0.6rem; animation: pulse 1.5s infinite;"></i>
+        <span class="fw-bold tracking-wider" style="font-size: 0.9rem;" id="recordingTimeDisplay">00:00</span>
+    </div>
+    <div style="width: 1px; height: 20px; background: rgba(255,255,255,0.2);"></div>
+    <button class="btn btn-sm btn-outline-light border-0 rounded-circle d-flex align-items-center justify-content-center" id="btnPauseResumeRecording" onclick="togglePauseRecording()" title="Pause" style="width: 32px; height: 32px; padding: 0;">
+        <i class="bi bi-pause-fill fs-6" id="recordingPauseIcon"></i>
+    </button>
+    <button class="btn btn-sm btn-danger rounded-circle d-flex align-items-center justify-content-center" id="btnStopRecording" onclick="stopRecording()" title="Stop Recording" style="width: 32px; height: 32px; padding: 0;">
+        <i class="bi bi-square-fill" style="font-size: 0.7rem;"></i>
+    </button>
+</div>
+
+<style>
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.3; }
+        100% { opacity: 1; }
+    }
+</style>
+
 {% endblock %}
 
 {% block extra_js %}
+<!-- Add Picmo for Emoji Picker -->
+<script src="https://cdn.jsdelivr.net/npm/@picmo/picker@5.8.5/dist/umd/picmo.min.js"></script>
+<input type="hidden" id="meeting-id-data" value="{{ meeting_id|default:'' }}">
+<input type="hidden" id="participant-id-data" value="{{ participant_id|default:'' }}">
+<input type="hidden" id="is-host-data" value="{{ is_host|yesno:'true,false' }}">
+<input type="hidden" id="participant-name-data" value="{{ participant_name }}">
+<input type="hidden" id="participant-status-data" value="{{ participant_status }}">
 <script>
 let localStream;
 let isAudioOn = true;
@@ -91,17 +298,154 @@ let isVideoOn = true;
 let isScreenSharing = false;
 let isHandRaised = false;
 
-function copyRoomCode() {
-    const roomCode = document.getElementById('roomCodeDisplay');
-    roomCode.select();
-    roomCode.setSelectionRange(0, 99999);
-    navigator.clipboard.writeText(roomCode.value).then(() => {
-        alert('Room code copied to clipboard!');
+const meetingId = document.getElementById('meeting-id-data').value;
+const participantId = document.getElementById('participant-id-data').value;
+const isHost = document.getElementById('is-host-data').value === "true";
+const participantName = document.getElementById('participant-name-data').value;
+let participantStatus = document.getElementById('participant-status-data').value;
+
+let ws;
+
+// Recording State
+let mediaRecorder;
+let recordedChunks = [];
+let recordingType = null;
+let recordingTimerInterval;
+let recordingElapsedTime = 0;
+
+function copyToClipboard(elementId, buttonId) {
+    const input = document.getElementById(elementId);
+    if (!input) return;
+    input.select();
+    input.setSelectionRange(0, 99999);
+    
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = document.getElementById(buttonId);
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>';
+        btn.style.background = 'rgba(16, 185, 129, 0.15)';
+        btn.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.style.background = 'rgba(255, 255, 255, 0.1)';
+            btn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+        }, 1500);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
     });
 }
 
-// Initialize meeting
+function copyRoomCode() { copyToClipboard('roomCodeDisplay', 'btnCopyCode'); }
+function copyMeetingId() { copyToClipboard('meetingIdDisplay', 'btnCopyId'); }
+function copyMeetingLink() { copyToClipboard('meetingLinkDisplay', 'btnCopyLink'); }
+
+document.addEventListener('DOMContentLoaded', () => {
+    const linkDisplay = document.getElementById('meetingLinkDisplay');
+    if (linkDisplay) {
+        linkDisplay.value = window.location.origin + '/meetings/join/{{ room_code }}/';
+    }
+});
+
+function initWebSocket() {
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    ws = new WebSocket(`${wsScheme}://${window.location.host}/ws/meetings/${meetingId}/`);
+
+    ws.onopen = function(e) {
+        ws.send(JSON.stringify({
+            action: 'join',
+            participant_id: participantId,
+            name: participantName,
+            is_host: isHost,
+            status: participantStatus,
+            is_audio_on: isAudioOn,
+            is_video_on: isVideoOn
+        }));
+    };
+
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        handleMeetingEvent(data);
+    };
+
+    ws.onclose = function(e) {
+        console.error('Meeting socket closed unexpectedly');
+    };
+}
+
+function handleMeetingEvent(data) {
+    const action = data.action;
+    const pid = data.participant_id;
+
+    if (action === 'admit' && pid == participantId) {
+        participantStatus = 'JOINED';
+        const overlay = document.getElementById('waitingRoomOverlay');
+        if(overlay) overlay.style.display = 'none';
+        initMeeting(); // start media if admitted
+        refreshParticipantsList();
+    } else if (action === 'remove' && pid == participantId) {
+        alert("You have been removed from the meeting by the host.");
+        window.location.href = '/meetings/dashboard/';
+    } else if (action === 'join') {
+        if(pid != participantId) {
+            refreshParticipantsList();
+        }
+    } else if (action === 'admit' || action === 'remove') {
+        refreshParticipantsList();
+    } else if (action === 'toggle_audio') {
+        const icon = document.getElementById(`mic-icon-${pid}`);
+        if(icon) {
+            icon.className = data.is_audio_on ? 'bi bi-mic-fill text-success' : 'bi bi-mic-mute-fill text-danger';
+        }
+    } else if (action === 'toggle_video') {
+        const icon = document.getElementById(`vid-icon-${pid}`);
+        if(icon) {
+            icon.className = data.is_video_on ? 'bi bi-camera-video-fill text-success' : 'bi bi-camera-video-off-fill text-danger';
+        }
+    } else if (action === 'raise_hand') {
+        const icon = document.getElementById(`hand-icon-${pid}`);
+        if(icon) {
+            if(data.has_raised_hand) {
+                icon.classList.remove('d-none');
+            } else {
+                icon.classList.add('d-none');
+            }
+        }
+    }
+}
+
+async function refreshParticipantsList() {
+    try {
+        const response = await fetch(window.location.href, { cache: 'no-store' });
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        
+        const newList = doc.getElementById('participantList');
+        if (newList) {
+            document.getElementById('participantList').innerHTML = newList.innerHTML;
+        }
+        
+        const newCount = doc.getElementById('participantCount');
+        if (newCount) {
+            document.getElementById('participantCount').innerHTML = newCount.innerHTML;
+        }
+        
+        const newSelector = doc.getElementById('chatTargetSelector');
+        if (newSelector) {
+            const oldVal = document.getElementById('chatTargetSelector').value;
+            document.getElementById('chatTargetSelector').innerHTML = newSelector.innerHTML;
+            if (document.querySelector(`#chatTargetSelector option[value="${oldVal}"]`)) {
+                document.getElementById('chatTargetSelector').value = oldVal;
+            }
+        }
+    } catch (e) {
+        console.error("Failed to refresh participants", e);
+    }
+}
+
+// Initialize meeting media
 async function initMeeting() {
+    if (participantStatus === 'WAITING') return; // Don't turn on camera yet
     try {
         localStream = await navigator.mediaDevices.getUserMedia({
             video: true,
@@ -113,6 +457,29 @@ async function initMeeting() {
     }
 }
 
+function sendWsEvent(action, extraData = {}) {
+    if(ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+            action: action,
+            participant_id: participantId,
+            ...extraData
+        }));
+    }
+}
+
+// Host controls
+window.admitParticipant = function(pid) {
+    if(!isHost) return;
+    sendWsEvent('admit', { participant_id: pid });
+};
+
+window.removeParticipant = function(pid) {
+    if(!isHost) return;
+    if(confirm('Remove this participant?')) {
+        sendWsEvent('remove', { participant_id: pid });
+    }
+};
+
 // Control toggles
 document.getElementById('toggleAudio').addEventListener('click', function() {
     if (!localStream) return;
@@ -120,14 +487,71 @@ document.getElementById('toggleAudio').addEventListener('click', function() {
     localStream.getAudioTracks()[0].enabled = isAudioOn;
     document.getElementById('audioIcon').className = isAudioOn ? 'bi bi-mic-fill' : 'bi bi-mic-mute-fill';
     this.style.background = isAudioOn ? 'rgba(255,255,255,0.15)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+    sendWsEvent('toggle_audio', { is_audio_on: isAudioOn });
 });
 
-document.getElementById('toggleVideo').addEventListener('click', function() {
+document.getElementById('toggleVideo').addEventListener('click', async function() {
     if (!localStream) return;
     isVideoOn = !isVideoOn;
-    localStream.getVideoTracks()[0].enabled = isVideoOn;
+    
+    if (isVideoOn) {
+        try {
+            const newStream = await navigator.mediaDevices.getUserMedia({video: true});
+            const newVideoTrack = newStream.getVideoTracks()[0];
+            // Remove old tracks and add new one
+            localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
+            localStream.addTrack(newVideoTrack);
+            // Re-assign srcObject to update video element
+            if (!isScreenSharing) {
+                document.getElementById('localVideo').srcObject = localStream;
+            }
+        } catch (error) {
+            console.error('Error restarting camera:', error);
+            isVideoOn = false; // Revert state if failed
+        }
+    } else {
+        localStream.getVideoTracks().forEach(t => t.stop());
+    }
+    
     document.getElementById('videoIcon').className = isVideoOn ? 'bi bi-camera-video-fill' : 'bi bi-camera-video-off-fill';
     this.style.background = isVideoOn ? 'rgba(255,255,255,0.15)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+    sendWsEvent('toggle_video', { is_video_on: isVideoOn });
+});
+
+document.getElementById('toggleScreen').addEventListener('click', async function() {
+    isScreenSharing = !isScreenSharing;
+    if (isScreenSharing) {
+        try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const screenTrack = screenStream.getVideoTracks()[0];
+            
+            // Listen for when user stops screen share via browser UI
+            screenTrack.onended = () => {
+                isScreenSharing = false;
+                document.getElementById('screenIcon').className = 'bi bi-display';
+                document.getElementById('toggleScreen').style.background = 'rgba(255,255,255,0.15)';
+                document.getElementById('localVideo').srcObject = localStream; // switch back to camera
+            };
+            
+            // Show screen share in the local video element
+            document.getElementById('localVideo').srcObject = screenStream;
+            document.getElementById('screenIcon').className = 'bi bi-display-fill';
+            this.style.background = 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)';
+            
+        } catch (error) {
+            console.error('Error sharing screen:', error);
+            isScreenSharing = false; // Revert
+        }
+    } else {
+        // Stop screen sharing and revert to camera
+        const currentStream = document.getElementById('localVideo').srcObject;
+        if (currentStream && currentStream !== localStream) {
+            currentStream.getTracks().forEach(t => t.stop());
+        }
+        document.getElementById('localVideo').srcObject = localStream;
+        document.getElementById('screenIcon').className = 'bi bi-display';
+        this.style.background = 'rgba(255,255,255,0.15)';
+    }
 });
 
 document.getElementById('leaveMeeting').addEventListener('click', function() {
@@ -140,9 +564,340 @@ document.getElementById('toggleHand').addEventListener('click', async function()
     isHandRaised = !isHandRaised;
     document.getElementById('handIcon').className = isHandRaised ? 'bi bi-hand-index-thumb-fill' : 'bi bi-hand-index-thumb';
     this.style.background = isHandRaised ? 'var(--warning-gradient)' : 'rgba(255,255,255,0.15)';
+    sendWsEvent('raise_hand', { has_raised_hand: isHandRaised });
+});
+
+let chatWs;
+
+function initChatWebSocket() {
+    const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+    chatWs = new WebSocket(`${wsScheme}://${window.location.host}/ws/meetings/${meetingId}/chat/`);
+
+    chatWs.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.action === "chat_message") {
+            appendChatMessage(data.message);
+        }
+    };
+    chatWs.onclose = function(e) {
+        console.error('Chat socket closed');
+    };
+}
+
+function appendChatMessage(msg) {
+    if (msg.is_private) {
+        const myId = "{{ request.user.id }}" || null;
+        // Only show if I am the sender or receiver
+        if (msg.sender_id != myId && msg.receiver_id != myId) {
+            return;
+        }
+    }
+    
+    const messagesContainer = document.getElementById('chatMessages');
+    const myId = "{{ request.user.id }}" || null;
+    const isMe = (msg.sender_id && msg.sender_id == myId) || (!msg.sender_id && msg.sender_name === participantName);
+    
+    let contentHtml = msg.content ? `<p class="mb-1">${msg.content}</p>` : "";
+    if (msg.file_url) {
+        if (msg.file_type === 'image') {
+            contentHtml += `<img src="${msg.file_url}" alt="attachment" class="img-fluid rounded mt-2" style="max-height: 150px;">`;
+        } else if (msg.file_type === 'video') {
+            contentHtml += `<video src="${msg.file_url}" controls class="w-100 rounded mt-2" style="max-height: 150px;"></video>`;
+        } else {
+            contentHtml += `<a href="${msg.file_url}" target="_blank" class="d-flex align-items-center mt-2 p-2 rounded text-decoration-none" style="background: rgba(255,255,255,0.1); color: #fff;">
+                                <i class="bi bi-file-earmark-text me-2 fs-4"></i>
+                                <span class="small text-truncate">${msg.file_name}</span>
+                            </a>`;
+        }
+    }
+    
+    const timeString = new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    const badgeHtml = msg.is_private ? `<span class="badge bg-danger ms-1" style="font-size: 0.6rem;">Private</span>` : "";
+
+    const div = document.createElement('div');
+    div.className = `d-flex flex-column mb-2 ${isMe ? 'align-items-end' : 'align-items-start'}`;
+    div.innerHTML = `
+        <div class="small text-light opacity-75 mb-1 ps-1 pe-1" style="font-size: 0.7rem;">
+            ${isMe ? 'You' : msg.sender_name} • ${timeString} ${badgeHtml}
+        </div>
+        <div class="p-2 rounded-3 text-light text-break" style="max-width: 85%; font-size: 0.9rem; ${isMe ? 'background: var(--primary-gradient);' : 'background: rgba(255,255,255,0.1);'}">
+            ${contentHtml}
+        </div>
+    `;
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function sendChatMessage(content, fileUrl=null, fileType=null, fileName=null) {
+    if (!chatWs || chatWs.readyState !== WebSocket.OPEN) return;
+    
+    const targetSelect = document.getElementById('chatTargetSelector');
+    const isPrivate = targetSelect.value !== 'all';
+    const receiverId = isPrivate ? targetSelect.value : null;
+
+    chatWs.send(JSON.stringify({
+        action: 'chat_message',
+        content: content,
+        sender_id: "{{ request.user.id }}" || null,
+        sender_name: participantName,
+        receiver_id: receiverId,
+        is_private: isPrivate,
+        file_url: fileUrl,
+        file_type: fileType,
+        file_name: fileName
+    }));
+}
+
+// Emoji Picker Setup
+const emojiBtn = document.getElementById('btnEmojiToggle');
+const pickerContainer = document.getElementById('emojiPickerContainer');
+const chatInput = document.getElementById('chatInputMsg');
+
+const picker = window.picmo.createPicker({ rootElement: pickerContainer });
+picker.addEventListener('emoji:select', event => {
+    chatInput.value += event.emoji;
+});
+emojiBtn.addEventListener('click', () => {
+    pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none';
+});
+// Hide picker when clicking outside
+document.addEventListener('click', (e) => {
+    if(!pickerContainer.contains(e.target) && !emojiBtn.contains(e.target)) {
+        pickerContainer.style.display = 'none';
+    }
+});
+
+// File Upload Handling
+let selectedFile = null;
+const btnAttachment = document.getElementById('btnAttachment');
+const fileInput = document.getElementById('fileUploadInput');
+const filePreviewArea = document.getElementById('filePreviewArea');
+const filePreviewName = document.getElementById('filePreviewName');
+const btnRemoveFile = document.getElementById('btnRemoveFile');
+
+btnAttachment.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', (e) => {
+    if(e.target.files.length > 0) {
+        selectedFile = e.target.files[0];
+        filePreviewName.textContent = selectedFile.name;
+        filePreviewArea.style.display = 'block';
+    }
+});
+
+btnRemoveFile.addEventListener('click', () => {
+    selectedFile = null;
+    fileInput.value = "";
+    filePreviewArea.style.display = 'none';
+});
+
+document.getElementById('btnSendMsg').addEventListener('click', async () => {
+    const msg = chatInput.value.trim();
+    if (!msg && !selectedFile) return;
+
+    if (selectedFile) {
+        const formData = new FormData();
+        formData.append('attachment', selectedFile);
+        formData.append('file_name', selectedFile.name);
+        
+        const fileTypeStr = selectedFile.type.startsWith('image/') ? 'image' : 
+                            selectedFile.type.startsWith('video/') ? 'video' : 'document';
+        formData.append('file_type', fileTypeStr);
+        // meeting needs to be the integer ID. We only have string meetingId in JS.
+        // wait, we can pass meeting via the view if needed, or lookup.
+        // In the view, it expects the 'meeting' which is FK.
+        formData.append('meeting', "{{ meeting_pk }}");
+        formData.append('sender_name', participantName);
+        if ("{{ request.user.id }}") {
+            formData.append('user', "{{ request.user.id }}");
+        }
+        
+        const targetSelect = document.getElementById('chatTargetSelector');
+        const isPrivate = targetSelect.value !== 'all';
+        if (isPrivate) {
+            formData.append('is_private', 'true');
+            formData.append('receiver', targetSelect.value);
+        }
+        if (msg) {
+            formData.append('content', msg);
+        }
+
+        try {
+            const resp = await fetch('/api/v1/chat/messages/upload/', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await resp.json();
+            sendChatMessage(msg, data.attachment, data.file_type, data.file_name);
+            
+            // clear form
+            selectedFile = null;
+            fileInput.value = "";
+            filePreviewArea.style.display = 'none';
+            chatInput.value = "";
+        } catch (e) {
+            console.error('Upload failed', e);
+            alert('File upload failed');
+        }
+    } else {
+        sendChatMessage(msg);
+        chatInput.value = "";
+    }
+});
+
+chatInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.getElementById('btnSendMsg').click();
 });
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', initMeeting);
+document.addEventListener('DOMContentLoaded', () => {
+    initWebSocket();
+    initChatWebSocket();
+    initMeeting();
+});
+
+// Recording Functions
+async function startRecording(type) {
+    const modalEl = document.getElementById('recordModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+
+    let streamToRecord;
+    recordedChunks = [];
+    recordingType = type;
+
+    try {
+        if (type === 'video') {
+            streamToRecord = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        } else if (type === 'screen') {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // Combine screen video and mic audio
+            const combinedTracks = [...screenStream.getVideoTracks(), ...micStream.getAudioTracks()];
+            streamToRecord = new MediaStream(combinedTracks);
+            
+            // Handle native stop sharing button
+            screenStream.getVideoTracks()[0].onended = () => stopRecording();
+        } else if (type === 'audio') {
+            streamToRecord = await navigator.mediaDevices.getUserMedia({ audio: true });
+        }
+
+        mediaRecorder = new MediaRecorder(streamToRecord);
+
+        mediaRecorder.ondataavailable = function(e) {
+            if (e.data.size > 0) {
+                recordedChunks.push(e.data);
+            }
+        };
+
+        mediaRecorder.onstop = async function() {
+            const extension = 'webm';
+            const mimeType = type === 'audio' ? 'audio/webm' : 'video/webm';
+            
+            const blob = new Blob(recordedChunks, { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style = 'display: none';
+            a.href = url;
+            const fileName = `Meeting_Recording_${new Date().getTime()}.${extension}`;
+            a.download = fileName;
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            // Upload to backend
+            const formData = new FormData();
+            formData.append('file', blob, fileName);
+            formData.append('meeting', "{{ meeting_pk }}");
+            formData.append('recording_type', type);
+
+            // helper to get csrf
+            const getCookie = (name) => {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            };
+
+            try {
+                const response = await fetch('/meetings/api/recordings/upload/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: formData
+                });
+                if (response.ok) {
+                    console.log('Recording successfully saved to backend.');
+                } else {
+                    console.error('Failed to save recording to backend.', await response.text());
+                }
+            } catch (err) {
+                console.error('Error uploading recording:', err);
+            }
+
+            // Stop hardware tracks
+            streamToRecord.getTracks().forEach(track => track.stop());
+            
+            // Reset UI
+            document.getElementById('recordingStatusContainer').style.setProperty('display', 'none', 'important');
+            clearInterval(recordingTimerInterval);
+            document.getElementById('recordBtnIcon').className = 'bi bi-record-circle';
+            document.getElementById('toggleRecord').style.background = 'rgba(255,255,255,0.15)';
+            
+            recordedChunks = [];
+        };
+
+        mediaRecorder.start(1000); // collect chunks every 1 second
+        
+        // Update UI
+        document.getElementById('recordingStatusContainer').style.setProperty('display', 'flex', 'important');
+        document.getElementById('recordBtnIcon').className = 'bi bi-record-circle-fill text-danger';
+        document.getElementById('toggleRecord').style.background = 'rgba(239, 68, 68, 0.2)';
+        document.getElementById('recordingPauseIcon').className = 'bi bi-pause-fill';
+        
+        recordingElapsedTime = 0;
+        document.getElementById('recordingTimeDisplay').textContent = "00:00";
+        recordingTimerInterval = setInterval(() => {
+            if (mediaRecorder.state === 'recording') {
+                recordingElapsedTime++;
+                const mins = String(Math.floor(recordingElapsedTime / 60)).padStart(2, '0');
+                const secs = String(recordingElapsedTime % 60).padStart(2, '0');
+                document.getElementById('recordingTimeDisplay').textContent = `${mins}:${secs}`;
+            }
+        }, 1000);
+
+    } catch (err) {
+        console.error("Error starting recording:", err);
+        alert("Failed to start recording. Please ensure you have granted necessary permissions.");
+    }
+}
+
+window.togglePauseRecording = function() {
+    if (!mediaRecorder) return;
+    
+    if (mediaRecorder.state === 'recording') {
+        mediaRecorder.pause();
+        document.getElementById('recordingPauseIcon').className = 'bi bi-play-fill';
+    } else if (mediaRecorder.state === 'paused') {
+        mediaRecorder.resume();
+        document.getElementById('recordingPauseIcon').className = 'bi bi-pause-fill';
+    }
+};
+
+window.stopRecording = function() {
+    if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+        mediaRecorder.stop();
+    }
+};
+
 </script>
 {% endblock %}

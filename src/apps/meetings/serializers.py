@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from apps.accounts.models import User
 from apps.accounts.serializers import UserSerializer
-from .models import Meeting, MeetingParticipant
+from .models import Meeting, MeetingParticipant, MeetingRecording
 
 
 class MeetingParticipantSerializer(serializers.ModelSerializer):
@@ -39,7 +39,7 @@ class CreateMeetingSerializer(serializers.ModelSerializer):
         fields = ['title', 'description', 'meeting_type', 'start_time', 'duration', 'password', 'enable_waiting_room', 'recurrence_pattern', 'recurrence_end_date']
 
     def validate(self, attrs):
-        if attrs.get('meeting_type') == 'INSTANT':
+        if attrs.get('meeting_type') in ['INSTANT', 'LINK_GENERATION', 'ID_GENERATION']:
             attrs['start_time'] = timezone.now()
         else:
             if 'start_time' not in attrs or attrs['start_time'] is None:
@@ -54,3 +54,9 @@ class JoinMeetingSerializer(serializers.Serializer):
     meeting_id = serializers.CharField(required=False)
     password = serializers.CharField(required=False, allow_blank=True)
     guest_name = serializers.CharField(required=False, allow_blank=True)
+
+
+class MeetingRecordingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MeetingRecording
+        fields = '__all__'

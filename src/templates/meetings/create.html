@@ -45,6 +45,8 @@
                             <option value="INSTANT" selected>Instant Meeting (Start Now)</option>
                             <option value="SCHEDULED">Scheduled Meeting</option>
                             <option value="RECURRING">Recurring Meeting</option>
+                            <option value="LINK_GENERATION">Meeting Link Generation</option>
+                            <option value="ID_GENERATION">Meeting ID Generation</option>
                         </select>
                     </div>
 
@@ -125,7 +127,7 @@ function clearCreateMeetingError() {
 }
 
 meetingTypeSelect.addEventListener('change', function() {
-    if (this.value === 'INSTANT') {
+    if (['INSTANT', 'LINK_GENERATION', 'ID_GENERATION'].includes(this.value)) {
         dateTimeField.style.display = 'none';
         recurrenceField.style.display = 'none';
     } else if (this.value === 'RECURRING') {
@@ -153,7 +155,7 @@ createMeetingForm.addEventListener('submit', async function(e) {
     };
 
     // Always set start_time (required for backend)
-    if (document.getElementById('meetingType').value === 'INSTANT') {
+    if (['INSTANT', 'LINK_GENERATION', 'ID_GENERATION'].includes(document.getElementById('meetingType').value)) {
         data.start_time = new Date().toISOString(); // Now for instant meetings
     } else {
         const dateValue = document.getElementById('startTime').value;

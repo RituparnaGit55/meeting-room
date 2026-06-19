@@ -2,13 +2,15 @@ from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
-from .models import Meeting, MeetingParticipant
+from .models import Meeting, MeetingParticipant, MeetingRecording
 from .serializers import (
     MeetingSerializer, CreateMeetingSerializer,
-    MeetingParticipantSerializer, JoinMeetingSerializer
+    MeetingParticipantSerializer, JoinMeetingSerializer,
+    MeetingRecordingSerializer
 )
 from .services.meeting_service import MeetingService, MeetingParticipantService
 from .repositories.meeting_repository import MeetingRepository, MeetingParticipantRepository
@@ -46,7 +48,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         meeting_type = serializer.validated_data.get('meeting_type', 'SCHEDULED')
         data = serializer.validated_data.copy()
-        if meeting_type == 'INSTANT':
+        if meeting_type in ['INSTANT', 'LINK_GENERATION', 'ID_GENERATION']:
             meeting = MeetingService.create_instant_meeting(
                 title=data.pop('title'),
                 host=self.request.user,
@@ -144,7 +146,32 @@ class MeetingParticipantViewSet(viewsets.ModelViewSet):
         return Response(MeetingParticipantSerializer(participant).data, status=status.HTTP_200_OK)
 
 
+from rest_framework.parsers import MultiPartParser, FormParser
+
+class UploadRecordingView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = MeetingRecordingSerializer
+    parser_classes = (MultiPartParser, FormParser)
+
+    def perform_create(self, serializer):
+        meeting_id = self.request.data.get('meeting')
+        meeting = get_object_or_404(Meeting, pk=meeting_id)
+        # Verify user is host or participant
+        if meeting.host != self.request.user and not meeting.participants.filter(user=self.request.user).exists():
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("You must be a participant to upload a recording.")
+            
+        file_obj = self.request.data.get('file')
+        file_size = file_obj.size if file_obj else 0
+        
+        serializer.save(
+            started_by=self.request.user,
+            file_size=file_size
+        )
+
+
 class JoinMeetingAPIView(generics.GenericAPIView):
+    authentication_classes = [SessionAuthentication]
     permission_classes = [AllowAny]
     serializer_class = JoinMeetingSerializer
 
@@ -154,14 +181,21 @@ class JoinMeetingAPIView(generics.GenericAPIView):
         try:
             room_code = serializer.validated_data.get('room_code')
             meeting_id = serializer.validated_data.get('meeting_id')
-            if not room_code and not meeting_id:
+            
+            identifier = room_code or meeting_id
+            if not identifier:
                 return Response({"error": "Room code or meeting ID required"}, status=status.HTTP_400_BAD_REQUEST)
             
-            if meeting_id:
-                meeting = MeetingRepository.get_meeting_by_meeting_id(meeting_id)
-                if not meeting:
-                    raise ValueError("Meeting not found")
-                room_code = meeting.room_code
+            # Try to resolve by room code first (case-insensitive)
+            meeting = MeetingRepository.get_meeting_by_room_code(identifier)
+            if not meeting:
+                # Try to resolve by meeting ID
+                meeting = MeetingRepository.get_meeting_by_meeting_id(identifier)
+            
+            if not meeting:
+                raise ValueError("Meeting not found")
+            
+            room_code = meeting.room_code
 
             meeting, participant = MeetingService.join_meeting_by_room_code(
                 room_code,
@@ -192,31 +226,76 @@ class MeetingRoomView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         room_code = kwargs.get('room_code', '')
+        meeting = None
+        try:
+            meeting = MeetingRepository.get_meeting_by_room_code(room_code)
+            if meeting:
+                context['meeting_id'] = meeting.meeting_id
+                context['meeting_pk'] = meeting.id
+        except Exception:
+            pass
+
         context['room_code'] = room_code
         
+        participant = None
         # Auto add authenticated user as participant if not already added
         if self.request.user.is_authenticated:
             try:
-                from .models import Meeting
-                meeting = MeetingRepository.get_meeting_by_room_code(room_code)
                 if meeting:
                     # Check if already participant
-                    participant_exists = MeetingParticipant.objects.filter(
+                    participant = MeetingParticipant.objects.filter(
                         meeting=meeting, user=self.request.user
-                    ).exists()
-                    if not participant_exists:
-                        MeetingParticipantRepository.add_participant(
+                    ).first()
+                    if not participant:
+                        participant = MeetingParticipantRepository.add_participant(
                             meeting, self.request.user, role='PARTICIPANT'
                         )
             except Exception:
                 pass  # Just ignore errors, page will still load
                 
+        if participant:
+            context['participant_id'] = participant.id
+            context['participant_role'] = participant.role
+            context['is_host'] = (participant.role == 'HOST')
+            context['participant_name'] = participant.user.first_name or participant.user.email if participant.user else participant.guest_name
+            context['participant_status'] = participant.status
+        else:
+            # Maybe a guest
+            context['participant_id'] = None
+            context['participant_role'] = 'GUEST'
+            context['is_host'] = False
+            context['participant_name'] = 'Guest'
+            context['participant_status'] = 'JOINED'
+            
+        context['enable_waiting_room'] = meeting.enable_waiting_room if meeting else False
+        
+        # Pass existing participants
+        if meeting:
+            if context.get('is_host'):
+                context['participants'] = meeting.participants.exclude(status__in=['LEFT', 'REMOVED'])
+            else:
+                context['participants'] = meeting.participants.filter(status='JOINED')
+        else:
+            context['participants'] = []
+            
         return context
 
 
 class JoinMeetingPageView(TemplateView):
     template_name = 'meetings/join.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['room_code'] = kwargs.get('room_code', '')
+        return context
+
 
 class MyMeetingsView(LoginRequiredMixin, TemplateView):
     template_name = 'meetings/my_meetings.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        meetings = Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)
+        context['recordings'] = MeetingRecording.objects.filter(meeting__in=meetings).distinct().order_by('-created_at')
+        return context

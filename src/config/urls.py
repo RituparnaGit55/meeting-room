@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.shortcuts import redirect, render
 from django.http import JsonResponse
+from django.views.generic.base import RedirectView
 
 def dashboard_view(request):
     if not request.user.is_authenticated:
@@ -17,6 +18,8 @@ def test_auth_view(request):
     })
 
 urlpatterns = [
+    path("favicon.ico", RedirectView.as_view(url=settings.STATIC_URL + "favicon.ico")),
+    path("accounts/login/", RedirectView.as_view(pattern_name="login", query_string=True)),
     path("admin/", admin.site.urls),
     # Web URLs first
     path("auth/", include("apps.accounts.urls")),
@@ -26,7 +29,7 @@ urlpatterns = [
     path("api/v1/meetings/", include(("apps.meetings.urls", "meetings-api"), namespace="meetings-api")),
     path("test-auth/", test_auth_view, name="test-auth"),
     # path("api/v1/participants/", include("apps.participants.urls")),
-    # path("api/v1/chat/", include("apps.chat.urls")),
+    path("api/v1/chat/", include("apps.chat.urls")),
     # path("api/v1/recordings/", include("apps.recordings.urls")),
     # path("api/v1/transcripts/", include("apps.transcripts.urls")),
     # path("api/v1/summaries/", include("apps.summaries.urls")),
@@ -44,5 +47,8 @@ if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
     if "debug_toolbar" in settings.INSTALLED_APPS:
-        import debug_toolbar
-        urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+        try:
+            debug_toolbar = __import__("debug_toolbar")
+            urlpatterns = [path("__debug__/", include(debug_toolbar.urls))] + urlpatterns
+        except ImportError:
+            pass

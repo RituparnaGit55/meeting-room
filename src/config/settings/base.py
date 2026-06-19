@@ -16,6 +16,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 AUTH_USER_MODEL = "accounts.User"
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -31,7 +32,7 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.meetings",
     # "apps.participants",
-    # "apps.chat",
+    "apps.chat",
     # "apps.recordings",
     # "apps.transcripts",
     # "apps.summaries",
@@ -192,3 +193,5 @@ CHANNEL_LAYERS = {
 # CELERY_TASK_SERIALIZER = "json"
 # CELERY_RESULT_SERIALIZER = "json"
 # CELERY_TIMEZONE = "UTC"
+
+LOGIN_URL = "/auth/login/"

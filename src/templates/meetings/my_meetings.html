@@ -18,6 +18,36 @@
             </div>
         </div>
     </div>
+
+    <!-- Recordings Section -->
+    {% if recordings %}
+    <div class="d-flex justify-content-between align-items-center mt-5 mb-4 fade-in-up">
+        <h2 class="fw-bold" style="color: var(--text-dark);"><i class="bi bi-camera-reels me-3 text-gradient"></i>My Recordings</h2>
+    </div>
+    <div class="row">
+        {% for recording in recordings %}
+        <div class="col-md-4 mb-4 fade-in-up">
+            <div class="meeting-item">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1" style="color: var(--text-dark);"><i class="bi bi-camera-video me-2 text-gradient"></i>{{ recording.meeting.title }}</h6>
+                        <p class="text-muted mb-0 small">{{ recording.created_at|date:"M d, Y H:i" }}</p>
+                    </div>
+                    <span class="badge rounded-pill" style="background: var(--warning-gradient);">{{ recording.recording_type|title }}</span>
+                </div>
+                <div class="d-flex gap-2 mt-3">
+                    <a href="{{ recording.file.url }}" target="_blank" class="btn-outline-glass flex-grow-1 text-center text-decoration-none">
+                        <i class="bi bi-play-circle me-2"></i>Play
+                    </a>
+                    <a href="{{ recording.file.url }}" download class="btn-gradient-primary flex-grow-1 text-center text-decoration-none">
+                        <i class="bi bi-download me-2"></i>Download
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
