@@ -38,9 +38,9 @@ INSTALLED_APPS = [
     "apps.meetings",
     # "apps.participants",
     "apps.chat",
-    # "apps.recordings",
-    # "apps.transcripts",
-    # "apps.summaries",
+    "apps.recordings",
+    "apps.transcripts",
+    "apps.summaries",
     # "apps.tasks",
     # "apps.notifications",
     # "apps.analytics",
@@ -164,6 +164,12 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback/")
 SITE_DOMAIN = os.getenv("SITE_DOMAIN", "http://localhost:8000")
+
+# AssemblyAI Configuration
+ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
+
+# OpenAI Configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 CHANNEL_LAYERS = {
     "default": {

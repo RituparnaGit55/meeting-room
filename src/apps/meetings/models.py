@@ -94,7 +94,7 @@ class MeetingParticipant(models.Model):
 
 
 class MeetingRecording(models.Model):
-    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="recordings")
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="meeting_recordings")
     started_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     file = models.FileField(upload_to="meeting_recordings/")
     recording_type = models.CharField(max_length=20)  # e.g., 'video', 'audio', 'screen'

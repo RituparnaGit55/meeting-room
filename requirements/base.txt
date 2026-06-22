@@ -20,3 +20,4 @@ google-auth-oauthlib>=1.0,<2.0
 whitenoise>=6.6,<7.0
 gunicorn>=21.0,<22.0
 uvicorn>=0.27,<1.0
+assemblyai>=0.33.0
