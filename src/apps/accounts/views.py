@@ -193,7 +193,7 @@ class GoogleOAuthView(generics.GenericAPIView):
 # Web Views (for frontend)
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("meeting-dashboard")
     
     if request.method == "POST":
         form = UserRegistrationForm(request.POST)
@@ -216,9 +216,16 @@ def register_view(request):
     return render(request, "accounts/register.html", {"form": form})
 
 
+def _get_role_redirect(user):
+    """Return the correct dashboard URL name based on user role."""
+    if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser:
+        return "admin-dashboard-page"
+    return "meeting-dashboard"
+
+
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect(_get_role_redirect(request.user))
     
     if request.method == "POST":
         form = UserLoginForm(request.POST)
@@ -229,7 +236,7 @@ def login_view(request):
                 django_login(request, user)
                 request.session["access_token"] = result["access"]
                 request.session["refresh_token"] = result["refresh"]
-                return redirect("dashboard")
+                return redirect(_get_role_redirect(user))
             except ValueError as e:
                 messages.error(request, str(e))
     else:
@@ -254,21 +261,20 @@ def verify_email_view(request, token):
 
 def forgot_password_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("meeting-dashboard")
     
     if request.method == "POST":
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data["email"]
-            new_password = form.cleaned_data["new_password"]
             try:
-                user = User.objects.get(email=email)
-                user.set_password(new_password)
-                user.save()
-                messages.success(request, "Your password has been reset successfully! You can now login.")
+                PasswordResetTokenService.create_and_send_token(email)
+                messages.success(request, "If that email address exists, a password reset link has been sent.")
                 return redirect("login")
             except Exception as e:
-                messages.error(request, f"An error occurred: {str(e)}")
+                # Don't reveal whether the email exists or not
+                messages.success(request, "If that email address exists, a password reset link has been sent.")
+                return redirect("login")
     else:
         form = PasswordResetRequestForm()
     return render(request, "accounts/forgot_password.html", {"form": form})
@@ -276,7 +282,7 @@ def forgot_password_view(request):
 
 def forgot_password_done_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect("meeting-dashboard")
     email = request.session.get("password_reset_email", "")
     return render(request, "accounts/password_reset_sent.html", {"email": email})
 

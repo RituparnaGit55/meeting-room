@@ -41,12 +41,12 @@ INSTALLED_APPS = [
     "apps.recordings",
     "apps.transcripts",
     "apps.summaries",
-    # "apps.tasks",
-    # "apps.notifications",
-    # "apps.analytics",
+    "apps.tasks",
+    "apps.notifications",
+    "apps.analytics",
     # "apps.webhooks",
     # "apps.api_keys",
-    # "apps.dashboard",
+    "apps.dashboard",
 ]
 
 SITE_ID = 1
@@ -170,6 +170,10 @@ ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# YouTube Upload Configuration
+YOUTUBE_API_CREDENTIALS_FILE = os.getenv("YOUTUBE_API_CREDENTIALS_FILE")
+YOUTUBE_DEFAULT_VISIBILITY = os.getenv("YOUTUBE_DEFAULT_VISIBILITY", "private")
 
 CHANNEL_LAYERS = {
     "default": {

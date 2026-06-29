@@ -32,14 +32,23 @@
                     <div>
                         <h6 class="fw-bold mb-1" style="color: var(--text-dark);"><i class="bi bi-camera-video me-2 text-gradient"></i>{{ recording.meeting.title }}</h6>
                         <p class="text-muted mb-0 small">{{ recording.created_at|date:"M d, Y H:i" }}</p>
+                        {% if recording.is_uploaded_to_youtube %}
+                        <span class="badge rounded-pill bg-danger-subtle text-danger mt-1 small" style="font-size: 0.75rem;"><i class="bi bi-youtube me-1"></i>YouTube</span>
+                        {% endif %}
                     </div>
                     <span class="badge rounded-pill" style="background: var(--warning-gradient);">{{ recording.recording_type|title }}</span>
                 </div>
                 <div class="d-flex gap-2 mt-3">
-                    <a href="{{ recording.file.url }}" target="_blank" class="btn-outline-glass flex-grow-1 text-center text-decoration-none">
+                    {% if recording.is_uploaded_to_youtube and recording.youtube_url %}
+                    <a href="{{ recording.youtube_url }}" target="_blank" class="btn-gradient-danger flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
+                        <i class="bi bi-youtube me-2"></i>Watch
+                    </a>
+                    {% else %}
+                    <a href="{{ recording.file.url }}" target="_blank" class="btn-outline-glass flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
                         <i class="bi bi-play-circle me-2"></i>Play
                     </a>
-                    <a href="{{ recording.file.url }}" download class="btn-gradient-primary flex-grow-1 text-center text-decoration-none">
+                    {% endif %}
+                    <a href="{{ recording.file.url }}" download class="btn-gradient-primary flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
                         <i class="bi bi-download me-2"></i>Download
                     </a>
                 </div>

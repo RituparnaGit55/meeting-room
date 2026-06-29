@@ -157,8 +157,17 @@
                 <a href="#">Terms</a>
                 <a href="#">Help Center</a>
             </div>
-            <div class="footer-copyright">
-                © 2024 MeetFlow Communications. All rights reserved.
+            <div class="footer-copyright d-flex align-items-center gap-3">
+                {% if user.is_authenticated %}
+                    {% if user.is_staff or user.is_superuser %}
+                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'admin-dashboard-page' %}" style="transition: opacity 0.2s;"><i class="bi bi-cpu me-1"></i>Admin</a>
+                    <span class="text-muted">|</span>
+                    {% endif %}
+                {% else %}
+                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'login' %}" style="transition: opacity 0.2s;"><i class="bi bi-shield-lock me-1"></i>Admin Login</a>
+                    <span class="text-muted">|</span>
+                {% endif %}
+                <span>© 2024 MeetFlow Communications. All rights reserved.</span>
             </div>
         </div>
     </div>

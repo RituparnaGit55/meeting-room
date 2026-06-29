@@ -1,3 +1,4 @@
+from typing import cast, Any
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,6 +7,7 @@ from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
+from apps.accounts.models import User
 from .models import Meeting, MeetingParticipant, MeetingRecording
 from .serializers import (
     MeetingSerializer, CreateMeetingSerializer,
@@ -48,21 +50,22 @@ class MeetingViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         meeting_type = serializer.validated_data.get('meeting_type', 'SCHEDULED')
         data = serializer.validated_data.copy()
+        user = cast(User, self.request.user)
         if meeting_type in ['INSTANT', 'LINK_GENERATION', 'ID_GENERATION']:
             meeting = MeetingService.create_instant_meeting(
                 title=data.pop('title'),
-                host=self.request.user,
+                host=user,
                 **data
             )
         else:
             meeting = MeetingService.create_scheduled_meeting(
                 title=data.pop('title'),
                 start_time=data.pop('start_time'),
-                host=self.request.user,
+                host=user,
                 **data
             )
         MeetingParticipantRepository.add_participant(
-            meeting, self.request.user, role='HOST'
+            meeting, user, role='HOST'
         )
         return meeting
 
@@ -154,18 +157,20 @@ class UploadRecordingView(generics.CreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def perform_create(self, serializer):
-        meeting_id = self.request.data.get('meeting')
+        request = cast(Any, self.request)
+        meeting_id = request.data.get('meeting')
         meeting = get_object_or_404(Meeting, pk=meeting_id)
+        user = cast(User, self.request.user)
         # Verify user is host or participant
-        if meeting.host != self.request.user and not meeting.participants.filter(user=self.request.user).exists():
+        if meeting.host != user and not MeetingParticipant.objects.filter(meeting=meeting, user=user).exists():
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("You must be a participant to upload a recording.")
             
-        file_obj = self.request.data.get('file')
+        file_obj = request.data.get('file')
         file_size = file_obj.size if file_obj else 0
         
         serializer.save(
-            started_by=self.request.user,
+            started_by=user,
             file_size=file_size
         )
 
@@ -199,7 +204,7 @@ class JoinMeetingAPIView(generics.GenericAPIView):
 
             meeting, participant = MeetingService.join_meeting_by_room_code(
                 room_code,
-                user=request.user if request.user.is_authenticated else None,
+                user=cast(Any, request.user if request.user.is_authenticated else None),
                 guest_name=serializer.validated_data.get('guest_name'),
                 password=serializer.validated_data.get('password')
             )
@@ -212,7 +217,7 @@ class JoinMeetingAPIView(generics.GenericAPIView):
 
 
 # Web Views
-class MeetingDashboardView(LoginRequiredMixin, TemplateView):
+class MeetingDashboardView(TemplateView):
     template_name = 'meetings/dashboard.html'
 
 
@@ -242,13 +247,14 @@ class MeetingRoomView(TemplateView):
         if self.request.user.is_authenticated:
             try:
                 if meeting:
+                    user = cast(User, self.request.user)
                     # Check if already participant
                     participant = MeetingParticipant.objects.filter(
-                        meeting=meeting, user=self.request.user
+                        meeting=meeting, user=user
                     ).first()
                     if not participant:
                         participant = MeetingParticipantRepository.add_participant(
-                            meeting, self.request.user, role='PARTICIPANT'
+                            meeting, user, role='PARTICIPANT'
                         )
             except Exception:
                 pass  # Just ignore errors, page will still load
@@ -272,9 +278,9 @@ class MeetingRoomView(TemplateView):
         # Pass existing participants
         if meeting:
             if context.get('is_host'):
-                context['participants'] = meeting.participants.exclude(status__in=['LEFT', 'REMOVED'])
+                context['participants'] = MeetingParticipant.objects.filter(meeting=meeting).exclude(status__in=['LEFT', 'REMOVED'])
             else:
-                context['participants'] = meeting.participants.filter(status='JOINED')
+                context['participants'] = MeetingParticipant.objects.filter(meeting=meeting, status='JOINED')
         else:
             context['participants'] = []
             

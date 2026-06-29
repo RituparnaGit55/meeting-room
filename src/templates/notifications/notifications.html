@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <!-- Page Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 fade-in-up">
+        <div>
+            <h1 class="fw-bold mb-1" style="font-size: 2rem;">
+                <i class="bi bi-bell-fill me-2" style="background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                Notifications
+            </h1>
+            <p class="text-muted mb-0">Stay up to date with your meetings, recordings, and tasks</p>
+        </div>
+        <div class="d-flex gap-2 mt-2 mt-md-0">
+            <button class="btn btn-gradient-primary d-flex align-items-center gap-2" id="markAllReadBtn" onclick="markAllRead()">
+                <i class="bi bi-check2-all"></i>
+                Mark all as read
+            </button>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="notification-filter-bar mb-4 fade-in-up delay-1">
+        <div class="d-flex flex-wrap gap-2">
+            <button class="notification-filter-chip active" data-filter="ALL" onclick="filterNotifications('ALL', this)">
+                <i class="bi bi-grid-fill"></i> All
+            </button>
+            <button class="notification-filter-chip" data-filter="MEETING_REMINDER" onclick="filterNotifications('MEETING_REMINDER', this)">
+                <i class="bi bi-alarm"></i> Meeting Reminders
+            </button>
+            <button class="notification-filter-chip" data-filter="RECORDING_READY" onclick="filterNotifications('RECORDING_READY', this)">
+                <i class="bi bi-record-circle"></i> Recordings
+            </button>
+            <button class="notification-filter-chip" data-filter="TRANSCRIPT_READY" onclick="filterNotifications('TRANSCRIPT_READY', this)">
+                <i class="bi bi-file-text"></i> Transcripts
+            </button>
+            <button class="notification-filter-chip" data-filter="SUMMARY_READY" onclick="filterNotifications('SUMMARY_READY', this)">
+                <i class="bi bi-journal-check"></i> Summaries
+            </button>
+            <button class="notification-filter-chip" data-filter="TASK_ASSIGNED" onclick="filterNotifications('TASK_ASSIGNED', this)">
+                <i class="bi bi-list-task"></i> Tasks
+            </button>
+        </div>
+    </div>
+
+    <!-- Notifications List -->
+    <div id="notificationsContainer" class="fade-in-up delay-2">
+        <div class="text-center py-5" id="notificationsLoading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading notifications...</p>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center py-5 d-none" id="emptyState">
+        <div class="mb-3" style="font-size: 4rem; opacity: 0.3;">
+            <i class="bi bi-bell-slash"></i>
+        </div>
+        <h4 class="fw-bold text-muted">No notifications yet</h4>
+        <p class="text-muted">When you get notifications, they'll show up here</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const NOTIFICATION_ICONS = {
+    'MEETING_INVITE': 'bi-envelope-fill',
+    'MEETING_START': 'bi-play-circle-fill',
+    'MEETING_REMINDER': 'bi-alarm-fill',
+    'RECORDING_READY': 'bi-record-circle-fill',
+    'TRANSCRIPT_READY': 'bi-file-text-fill',
+    'SUMMARY_READY': 'bi-journal-check',
+    'TASK_ASSIGNED': 'bi-list-task',
+    'YOUTUBE_UPLOADED': 'bi-youtube',
+    'MESSAGE': 'bi-chat-dots-fill',
+};
+
+const NOTIFICATION_COLORS = {
+    'MEETING_INVITE': '#667eea',
+    'MEETING_START': '#10b981',
+    'MEETING_REMINDER': '#f59e0b',
+    'RECORDING_READY': '#ef4444',
+    'TRANSCRIPT_READY': '#3b82f6',
+    'SUMMARY_READY': '#8b5cf6',
+    'TASK_ASSIGNED': '#ec4899',
+    'YOUTUBE_UPLOADED': '#ff0000',
+    'MESSAGE': '#06b6d4',
+};
+
+let currentFilter = 'ALL';
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function loadNotifications() {
+    let url = '/api/v1/notifications/';
+    const params = new URLSearchParams();
+    if (currentFilter !== 'ALL') {
+        params.set('type', currentFilter);
+    }
+    if (params.toString()) {
+        url += '?' + params.toString();
+    }
+
+    fetch(url, {
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        credentials: 'same-origin',
+    })
+    .then(res => res.json())
+    .then(data => {
+        const notifications = data.results || data;
+        renderNotifications(notifications);
+    })
+    .catch(err => {
+        console.error('Error loading notifications:', err);
+        document.getElementById('notificationsLoading').innerHTML =
+            '<p class="text-danger">Failed to load notifications. Please try again.</p>';
+    });
+}
+
+function renderNotifications(notifications) {
+    const container = document.getElementById('notificationsContainer');
+    const emptyState = document.getElementById('emptyState');
+    const loading = document.getElementById('notificationsLoading');
+
+    if (loading) loading.classList.add('d-none');
+
+    if (!notifications || notifications.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('d-none');
+        return;
+    }
+
+    emptyState.classList.add('d-none');
+
+    let html = '';
+    notifications.forEach((n, index) => {
+        const icon = NOTIFICATION_ICONS[n.type] || 'bi-bell-fill';
+        const color = NOTIFICATION_COLORS[n.type] || '#667eea';
+        const unreadClass = n.is_read ? '' : 'notification-card-unread';
+        const delay = Math.min(index * 0.05, 0.5);
+
+        html += `
+        <div class="notification-card ${unreadClass}" id="notification-${n.id}"
+             style="animation-delay: ${delay}s">
+            <div class="d-flex align-items-start gap-3">
+                <div class="notification-card-icon" style="background: ${color}15; color: ${color};">
+                    <i class="bi ${icon}"></i>
+                </div>
+                <div class="flex-grow-1 min-width-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <h6 class="notification-card-title mb-1">${escapeHtml(n.title)}</h6>
+                            <p class="notification-card-message mb-1">${escapeHtml(n.message)}</p>
+                            ${n.meeting_title ? `<span class="notification-card-meeting"><i class="bi bi-camera-video me-1"></i>${escapeHtml(n.meeting_title)}</span>` : ''}
+                        </div>
+                        <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                            <span class="notification-card-time">${n.time_ago || formatTime(n.created_at)}</span>
+                            ${!n.is_read ? `<button class="notification-mark-btn" onclick="markAsRead(${n.id})" title="Mark as read"><i class="bi bi-check2"></i></button>` : ''}
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <span class="notification-type-badge" style="background: ${color}15; color: ${color};">
+                            <i class="bi ${icon} me-1"></i>${n.type_display || n.type.replace(/_/g, ' ')}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function formatTime(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+    return Math.floor(diff / 86400) + 'd ago';
+}
+
+function filterNotifications(type, btn) {
+    currentFilter = type;
+    // Update active chip
+    document.querySelectorAll('.notification-filter-chip').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    // Reload
+    document.getElementById('notificationsContainer').innerHTML = `
+        <div class="text-center py-5" id="notificationsLoading">
+            <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+            <p class="text-muted mt-2">Loading notifications...</p>
+        </div>
+    `;
+    document.getElementById('emptyState').classList.add('d-none');
+    loadNotifications();
+}
+
+function markAsRead(id) {
+    fetch(`/api/v1/notifications/${id}/read/`, {
+        method: 'PATCH',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+    .then(res => {
+        if (res.ok) {
+            const card = document.getElementById(`notification-${id}`);
+            if (card) {
+                card.classList.remove('notification-card-unread');
+                const btn = card.querySelector('.notification-mark-btn');
+                if (btn) btn.remove();
+            }
+            updateNavbarBadge();
+        }
+    });
+}
+
+function markAllRead() {
+    fetch('/api/v1/notifications/read-all/', {
+        method: 'PATCH',
+        headers: {
+            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+    .then(res => {
+        if (res.ok) {
+            document.querySelectorAll('.notification-card-unread').forEach(card => {
+                card.classList.remove('notification-card-unread');
+                const btn = card.querySelector('.notification-mark-btn');
+                if (btn) btn.remove();
+            });
+            updateNavbarBadge();
+        }
+    });
+}
+
+function updateNavbarBadge() {
+    fetch('/api/v1/notifications/unread-count/', {
+        credentials: 'same-origin',
+    })
+    .then(res => res.json())
+    .then(data => {
+        const badge = document.getElementById('notifBadge');
+        if (badge) {
+            if (data.unread_count > 0) {
+                badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                badge.classList.remove('d-none');
+            } else {
+                badge.classList.add('d-none');
+            }
+        }
+    });
+}
+
+// Load on page ready
+document.addEventListener('DOMContentLoaded', loadNotifications);
+</script>
+{% endblock %}

@@ -71,5 +71,38 @@ def generate_meeting_summary(meeting_id):
         
         print(f"Meeting summary generated successfully for meeting {meeting_id}.")
         
+        # Notify host: Summary Ready
+        try:
+            from apps.notifications.services import NotificationService
+            NotificationService.notify_host(
+                meeting=meeting,
+                notification_type="SUMMARY_READY",
+                title="Meeting Summary Ready",
+                message=f"The AI-generated summary for meeting '{meeting.title}' is now available.",
+            )
+        except Exception as notify_err:
+            print(f"Failed to send summary notification: {notify_err}")
+        
+        # Chain: Generate tasks from summary
+        try:
+            from apps.tasks.tasks import generate_tasks_from_summary
+            generate_tasks_from_summary.delay(meeting_id)
+        except Exception as task_err:
+            print(f"Failed to trigger task generation: {task_err}")
+        
+        # Chain: Upload recordings to YouTube
+        try:
+            from apps.recordings.tasks import upload_recording_to_youtube
+            from apps.recordings.models import Recording
+            from apps.meetings.models import MeetingRecording
+            
+            # Upload from both Recording models
+            for recording in Recording.objects.filter(meeting=meeting):
+                upload_recording_to_youtube.delay(recording.id, "Recording")
+            for recording in MeetingRecording.objects.filter(meeting=meeting):
+                upload_recording_to_youtube.delay(recording.id, "MeetingRecording")
+        except Exception as yt_err:
+            print(f"Failed to trigger YouTube upload: {yt_err}")
+        
     except Exception as e:
         print(f"Error generating meeting summary for meeting {meeting_id}: {e}")

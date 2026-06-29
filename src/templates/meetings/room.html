@@ -209,6 +209,26 @@
             <button class="control-btn" id="toggleHand" title="Raise Hand">
                 <i class="bi bi-hand-index-thumb" id="handIcon"></i>
             </button>
+            <!-- Reactions Button -->
+            <div class="position-relative">
+                <button class="control-btn" id="toggleReactions" title="Reactions">
+                    <i class="bi bi-emoji-smile" id="reactionsIcon"></i>
+                </button>
+                <!-- Reaction Tray Popup -->
+                <div id="reactionTray" style="display:none; position:absolute; bottom:100%; left:50%; transform:translateX(-50%); margin-bottom:12px; z-index:1060;">
+                    <div style="background:rgba(15,23,42,0.95); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.15); border-radius:16px; padding:8px 10px; box-shadow:0 12px 40px rgba(0,0,0,0.5); display:flex; gap:4px; white-space:nowrap;">
+                        <button class="reaction-emoji-btn" data-emoji="👍" title="Thumbs Up">👍</button>
+                        <button class="reaction-emoji-btn" data-emoji="👏" title="Clap">👏</button>
+                        <button class="reaction-emoji-btn" data-emoji="😂" title="Laugh">😂</button>
+                        <button class="reaction-emoji-btn" data-emoji="❤️" title="Love">❤️</button>
+                        <button class="reaction-emoji-btn" data-emoji="🎉" title="Celebrate">🎉</button>
+                        <button class="reaction-emoji-btn" data-emoji="🔥" title="Fire">🔥</button>
+                        <button class="reaction-emoji-btn" data-emoji="😮" title="Surprised">😮</button>
+                        <button class="reaction-emoji-btn" data-emoji="🤔" title="Thinking">🤔</button>
+                    </div>
+                    <div style="width:12px; height:12px; background:rgba(15,23,42,0.95); border-right:1px solid rgba(255,255,255,0.15); border-bottom:1px solid rgba(255,255,255,0.15); transform:rotate(45deg); position:absolute; bottom:-6px; left:50%; margin-left:-6px;"></div>
+                </div>
+            </div>
             <button class="control-btn" id="toggleRecord" title="Record Meeting" data-bs-toggle="modal" data-bs-target="#recordModal">
                 <i class="bi bi-record-circle" id="recordBtnIcon"></i>
             </button>
@@ -273,19 +293,63 @@
     </button>
 </div>
 
+<!-- Floating Reaction Container -->
+<div id="floatingReactionsContainer" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:1055; overflow:hidden;"></div>
+
 <style>
     @keyframes pulse {
         0% { opacity: 1; }
         50% { opacity: 0.3; }
         100% { opacity: 1; }
     }
+
+    /* Reaction emoji buttons in the tray */
+    .reaction-emoji-btn {
+        font-size: 1.6rem;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 10px;
+        transition: all 0.2s ease;
+        line-height: 1;
+    }
+    .reaction-emoji-btn:hover {
+        background: rgba(255,255,255,0.15);
+        transform: scale(1.3);
+    }
+    .reaction-emoji-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Floating emoji animation */
+    @keyframes floatUpReaction {
+        0% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+        60% {
+            opacity: 1;
+            transform: translateY(-35vh) scale(1.2);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-55vh) scale(0.6);
+        }
+    }
+    .floating-reaction {
+        position: absolute;
+        bottom: 120px;
+        font-size: 2.8rem;
+        animation: floatUpReaction 2.5s ease-out forwards;
+        pointer-events: none;
+        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+    }
 </style>
 
 {% endblock %}
 
 {% block extra_js %}
-<!-- Add Picmo for Emoji Picker -->
-<script src="https://cdn.jsdelivr.net/npm/@picmo/picker@5.8.5/dist/umd/picmo.min.js"></script>
 <input type="hidden" id="meeting-id-data" value="{{ meeting_id|default:'' }}">
 <input type="hidden" id="participant-id-data" value="{{ participant_id|default:'' }}">
 <input type="hidden" id="is-host-data" value="{{ is_host|yesno:'true,false' }}">
@@ -648,15 +712,37 @@ function sendChatMessage(content, fileUrl=null, fileType=null, fileName=null) {
     }));
 }
 
-// Emoji Picker Setup
+// Emoji Picker Setup (built-in, no CDN dependency)
 const emojiBtn = document.getElementById('btnEmojiToggle');
 const pickerContainer = document.getElementById('emojiPickerContainer');
 const chatInput = document.getElementById('chatInputMsg');
 
-const picker = window.picmo.createPicker({ rootElement: pickerContainer });
-picker.addEventListener('emoji:select', event => {
-    chatInput.value += event.emoji;
+const commonEmojis = [
+    '😀','😂','😍','🤩','😎','🤔','😢','😡','👍','👎',
+    '👏','🙌','🤝','💪','🎉','🔥','❤️','💯','✅','❌',
+    '⭐','💡','📌','📎','🗓️','⏰','🎯','📝','👋','🙏',
+    '😊','😅','🤣','😇','🥳','😤','😱','🤯','🫡','🫶',
+    '👀','🧠','💬','📢','🚀','🏆','💼','📊','📈','✨'
+];
+
+// Build emoji grid inside the container
+const emojiGrid = document.createElement('div');
+emojiGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10,1fr); gap:2px; padding:8px; background:rgba(30,41,59,0.97); border:1px solid rgba(255,255,255,0.15); border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.4); max-width:320px;';
+commonEmojis.forEach(emoji => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = emoji;
+    btn.style.cssText = 'font-size:1.3rem; background:none; border:none; cursor:pointer; padding:4px; border-radius:6px; transition:background 0.15s;';
+    btn.addEventListener('mouseenter', () => btn.style.background = 'rgba(255,255,255,0.15)');
+    btn.addEventListener('mouseleave', () => btn.style.background = 'none');
+    btn.addEventListener('click', () => {
+        chatInput.value += emoji;
+        chatInput.focus();
+    });
+    emojiGrid.appendChild(btn);
 });
+pickerContainer.appendChild(emojiGrid);
+
 emojiBtn.addEventListener('click', () => {
     pickerContainer.style.display = pickerContainer.style.display === 'none' ? 'block' : 'none';
 });
@@ -896,6 +982,60 @@ window.togglePauseRecording = function() {
 window.stopRecording = function() {
     if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
         mediaRecorder.stop();
+    }
+};
+
+// ============ Emoji Reactions ============
+const reactionTray = document.getElementById('reactionTray');
+const reactionsBtn = document.getElementById('toggleReactions');
+const floatingContainer = document.getElementById('floatingReactionsContainer');
+
+// Toggle reaction tray
+reactionsBtn.addEventListener('click', () => {
+    reactionTray.style.display = reactionTray.style.display === 'none' ? 'block' : 'none';
+});
+
+// Close tray when clicking outside
+document.addEventListener('click', (e) => {
+    if (!reactionTray.contains(e.target) && !reactionsBtn.contains(e.target)) {
+        reactionTray.style.display = 'none';
+    }
+});
+
+// Send reaction when emoji clicked
+document.querySelectorAll('.reaction-emoji-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const emoji = btn.getAttribute('data-emoji');
+        showFloatingReaction(emoji);
+
+        // Broadcast reaction via WebSocket
+        sendWsEvent('reaction', { emoji: emoji, sender_name: participantName });
+
+        // Auto-close tray after reacting
+        reactionTray.style.display = 'none';
+    });
+});
+
+// Show a floating emoji on screen
+function showFloatingReaction(emoji) {
+    const el = document.createElement('div');
+    el.className = 'floating-reaction';
+    el.textContent = emoji;
+    // Randomize horizontal position slightly
+    const randomLeft = 10 + Math.random() * 80; // 10% to 90% of screen width
+    el.style.left = randomLeft + '%';
+    floatingContainer.appendChild(el);
+    // Remove after animation completes
+    el.addEventListener('animationend', () => el.remove());
+}
+
+// Handle incoming reactions from other participants via WebSocket
+const _originalHandleMeetingEvent = handleMeetingEvent;
+handleMeetingEvent = function(data) {
+    if (data.action === 'reaction') {
+        showFloatingReaction(data.emoji);
+    } else {
+        _originalHandleMeetingEvent(data);
     }
 };
 

@@ -94,11 +94,23 @@ class MeetingParticipant(models.Model):
 
 
 class MeetingRecording(models.Model):
+    VISIBILITY_CHOICES = [
+        ("private", "Private"),
+        ("unlisted", "Unlisted"),
+        ("public", "Public"),
+    ]
+
     meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="meeting_recordings")
     started_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
     file = models.FileField(upload_to="meeting_recordings/")
     recording_type = models.CharField(max_length=20)  # e.g., 'video', 'audio', 'screen'
     file_size = models.BigIntegerField(null=True, blank=True)
+    is_uploaded_to_youtube = models.BooleanField(default=False)
+    youtube_url = models.URLField(blank=True, null=True)
+    youtube_video_id = models.CharField(max_length=100, blank=True, null=True)
+    youtube_visibility = models.CharField(
+        max_length=20, choices=VISIBILITY_CHOICES, default="private", blank=True
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

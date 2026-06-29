@@ -61,6 +61,18 @@ def process_transcription(recording_id, recording_model="Recording"):
             
         print(f"Transcription completed for recording {recording_id}. Created {created_count} utterances.")
         
+        # Notify host: Transcript Ready
+        try:
+            from apps.notifications.services import NotificationService
+            NotificationService.notify_host(
+                meeting=meeting,
+                notification_type="TRANSCRIPT_READY",
+                title="Transcript Ready",
+                message=f"The transcript for meeting '{meeting.title}' is ready with {created_count} utterances.",
+            )
+        except Exception as notify_err:
+            print(f"Failed to send transcript notification: {notify_err}")
+        
         # Trigger meeting summary generation automatically
         from apps.summaries.tasks import generate_meeting_summary
         generate_meeting_summary.delay(meeting.id)
