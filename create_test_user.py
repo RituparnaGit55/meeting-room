@@ -27,6 +27,9 @@ user, created = User.objects.get_or_create(
         "first_name": "Test",
         "last_name": "User",
         "is_email_verified": True,
+        "is_staff": True,
+        "is_superuser": True,
+        "role": "ADMIN",
     }
 )
 
@@ -38,7 +41,10 @@ if created:
     print(f"Password: {password}")
 else:
     user.set_password(password)
+    setattr(user, "is_staff", True)
+    setattr(user, "is_superuser", True)
+    setattr(user, "role", "ADMIN")
     user.save()
-    print("Test user updated!")
+    print("Test user updated and promoted to Admin!")
     print(f"Email: {email}")
     print(f"Password: {password}")
