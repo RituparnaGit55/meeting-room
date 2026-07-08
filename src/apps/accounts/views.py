@@ -17,7 +17,7 @@ from .services.user_service import (
 )
 from .permissions import IsOwnerOrAdmin
 from .forms import (
-    UserRegistrationForm, UserLoginForm, UserProfileForm, 
+    UserRegistrationForm, UserLoginForm, AdminLoginForm, UserProfileForm, 
     PasswordResetRequestForm, PasswordResetForm, ChangePasswordForm
 )
 
@@ -193,7 +193,7 @@ class GoogleOAuthView(generics.GenericAPIView):
 # Web Views (for frontend)
 def register_view(request):
     if request.user.is_authenticated:
-        return redirect("meeting-dashboard")
+        return redirect(_get_role_redirect(request.user))
     
     if request.method == "POST":
         form = UserRegistrationForm(request.POST)
@@ -220,7 +220,7 @@ def _get_role_redirect(user):
     """Return the correct dashboard URL name based on user role."""
     if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser:
         return "admin-dashboard-page"
-    return "meeting-dashboard"
+    return "my-meetings"
 
 
 def login_view(request):
@@ -244,6 +244,27 @@ def login_view(request):
     return render(request, "accounts/login.html", {"form": form})
 
 
+def admin_login_view(request):
+    if request.user.is_authenticated:
+        return redirect(_get_role_redirect(request.user))
+    
+    if request.method == "POST":
+        form = AdminLoginForm(request.POST)
+        if form.is_valid():
+            try:
+                user = form.cleaned_data["user"]
+                result = UserService.login_user(user.email, request.POST["password"])
+                django_login(request, user)
+                request.session["access_token"] = result["access"]
+                request.session["refresh_token"] = result["refresh"]
+                return redirect(_get_role_redirect(user))
+            except ValueError as e:
+                messages.error(request, str(e))
+    else:
+        form = AdminLoginForm()
+    return render(request, "accounts/admin_login.html", {"form": form})
+
+
 def logout_view(request):
     request.session.flush()
     return redirect("login")
@@ -261,7 +282,7 @@ def verify_email_view(request, token):
 
 def forgot_password_view(request):
     if request.user.is_authenticated:
-        return redirect("meeting-dashboard")
+        return redirect(_get_role_redirect(request.user))
     
     if request.method == "POST":
         form = PasswordResetRequestForm(request.POST)
@@ -282,14 +303,14 @@ def forgot_password_view(request):
 
 def forgot_password_done_view(request):
     if request.user.is_authenticated:
-        return redirect("meeting-dashboard")
+        return redirect(_get_role_redirect(request.user))
     email = request.session.get("password_reset_email", "")
     return render(request, "accounts/password_reset_sent.html", {"email": email})
 
 
 def reset_password_view(request, token):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect(_get_role_redirect(request.user))
     
     token_obj = PasswordResetTokenService.get_token(token)
     if not token_obj or token_obj.is_expired():
@@ -311,7 +332,7 @@ def reset_password_view(request, token):
 
 def reset_password_success_view(request):
     if request.user.is_authenticated:
-        return redirect("dashboard")
+        return redirect(_get_role_redirect(request.user))
     return render(request, "accounts/password_reset_success.html")
 
 

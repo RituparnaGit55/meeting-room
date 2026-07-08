@@ -6,8 +6,8 @@
 <div class="py-4">
     <div class="d-flex justify-content-between align-items-center mb-4 fade-in-up">
         <h1 class="fw-bold" style="color: var(--text-dark);"><i class="bi bi-calendar-event me-3 text-gradient"></i>My Meetings</h1>
-        <a href="{% url 'create-meeting' %}" class="btn-gradient-primary px-4 py-2">
-            <i class="bi bi-plus-circle me-2"></i>New Meeting
+        <a href="{% url 'create-meeting' %}" class="btn-gradient-primary px-4 py-2 fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>NEW MEETING
         </a>
     </div>
 
@@ -40,16 +40,16 @@
                 </div>
                 <div class="d-flex gap-2 mt-3">
                     {% if recording.is_uploaded_to_youtube and recording.youtube_url %}
-                    <a href="{{ recording.youtube_url }}" target="_blank" class="btn-gradient-danger flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
-                        <i class="bi bi-youtube me-2"></i>Watch
+                    <a href="{{ recording.youtube_url }}" target="_blank" class="btn-gradient-danger flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center fw-bold">
+                        <i class="bi bi-youtube me-2"></i>WATCH
                     </a>
                     {% else %}
-                    <a href="{{ recording.file.url }}" target="_blank" class="btn-outline-glass flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
-                        <i class="bi bi-play-circle me-2"></i>Play
+                    <a href="{{ recording.file.url }}" target="_blank" class="btn-outline-glass flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center fw-bold">
+                        <i class="bi bi-play-circle me-2"></i>PLAY
                     </a>
                     {% endif %}
-                    <a href="{{ recording.file.url }}" download class="btn-gradient-primary flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center">
-                        <i class="bi bi-download me-2"></i>Download
+                    <a href="{{ recording.file.url }}" download class="btn-gradient-primary flex-grow-1 text-center text-decoration-none d-flex align-items-center justify-content-center fw-bold">
+                        <i class="bi bi-download me-2"></i>DOWNLOAD
                     </a>
                 </div>
             </div>
@@ -87,8 +87,8 @@ async function loadMeetings() {
                         <i class="bi bi-calendar-x" style="font-size: 5rem; color: #667eea;"></i>
                         <h3 class="text-dark mt-3 mb-3">No meetings yet</h3>
                         <p class="text-muted mb-4">Create your first meeting and get started!</p>
-                        <a href="{% url 'create-meeting' %}" class="btn-gradient-primary px-5 py-2">
-                            <i class="bi bi-plus-circle me-2"></i>Create Meeting
+                        <a href="{% url 'create-meeting' %}" class="btn-gradient-primary px-5 py-2 fw-bold">
+                            <i class="bi bi-plus-circle me-2"></i>CREATE MEETING
                         </a>
                     </div>
                 </div>
@@ -120,10 +120,10 @@ async function loadMeetings() {
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="/meetings/room/${meeting.room_code}/" class="btn-gradient-primary flex-grow-1">
-                            <i class="bi bi-door-open me-2"></i><strong style="color: red;">Join</strong>
+                        <a href="/meetings/room/${meeting.room_code}/" class="btn-gradient-primary flex-grow-1 fw-bold">
+                            <i class="bi bi-door-open me-2"></i>JOIN
                         </a>
-                        <button class="btn-outline-glass" onclick="copyToClipboard('${meeting.room_code}')">
+                        <button class="btn-outline-glass fw-bold" onclick="copyToClipboard('${meeting.room_code}')">
                             <i class="bi bi-clipboard"></i>
                         </button>
                     </div>

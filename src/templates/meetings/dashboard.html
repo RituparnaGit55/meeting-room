@@ -26,13 +26,13 @@
                 </p>
                 
                 <div class="d-flex gap-3 mb-5 flex-wrap">
-                    <a href="{% url 'create-meeting' %}" class="btn-primary-custom d-flex align-items-center">
+                    <a href="{% url 'create-meeting' %}" class="btn-primary-custom d-flex align-items-center fw-bold">
                         <i class="bi bi-video-camera me-2"></i>
-                        Start Free Meeting
+                        START FREE MEETING
                     </a>
                     <div class="join-input-group d-flex rounded-3">
                         <input type="text" class="join-input flex-grow-1 border-0" id="joinCodeInput" placeholder="Enter meeting code">
-                        <a href="{% url 'join-meeting-page' %}" class="btn-join"><strong>Join</strong></a>
+                        <a href="{% url 'join-meeting-page' %}" class="btn-join fw-bold">JOIN</a>
                     </div>
                 </div>
                 
@@ -164,7 +164,7 @@
                     <span class="text-muted">|</span>
                     {% endif %}
                 {% else %}
-                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'login' %}" style="transition: opacity 0.2s;"><i class="bi bi-shield-lock me-1"></i>Admin Login</a>
+                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'admin-login' %}" style="transition: opacity 0.2s;"><i class="bi bi-shield-lock me-1"></i>Admin Login</a>
                     <span class="text-muted">|</span>
                 {% endif %}
                 <span>© 2024 MeetFlow Communications. All rights reserved.</span>

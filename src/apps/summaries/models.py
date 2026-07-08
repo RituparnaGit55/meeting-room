@@ -4,6 +4,8 @@ from apps.meetings.models import Meeting
 
 
 class Summary(models.Model):
+    objects = models.Manager()
+
     meeting = models.OneToOneField(Meeting, on_delete=models.CASCADE, related_name="summary")
     summary_text = models.TextField(blank=True, null=True)
     key_points = models.JSONField(default=list, blank=True)
@@ -19,6 +21,8 @@ class Summary(models.Model):
 
 
 class MeetingNote(models.Model):
+    objects = models.Manager()
+
     NOTE_TYPES = [
         ("NOTE", "Note"),
         ("HIGHLIGHT", "Discussion Highlight"),

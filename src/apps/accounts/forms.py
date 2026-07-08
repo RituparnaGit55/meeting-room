@@ -87,7 +87,36 @@ class UserLoginForm(forms.Form):
                 raise forms.ValidationError("Invalid email or password")
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive")
-            # Email verification check is disabled
+            # Restrict general users to non-admin accounts
+            if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser or user.is_staff:
+                raise forms.ValidationError("This portal is for general users. Please use the Admin Login page.")
+            cleaned_data['user'] = user
+        return cleaned_data
+
+
+class AdminLoginForm(forms.Form):
+    email = forms.EmailField(widget=forms.EmailInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Enter email'
+    }))
+    password = forms.CharField(widget=forms.PasswordInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Enter password'
+    }))
+
+    def clean(self):
+        cleaned_data = super().clean()
+        email = cleaned_data.get('email')
+        password = cleaned_data.get('password')
+        if email and password:
+            user = authenticate(email=email, password=password)
+            if not user:
+                raise forms.ValidationError("Invalid email or password")
+            if not user.is_active:
+                raise forms.ValidationError("This account is inactive")
+            # Restrict admin login portal to admins/staff
+            if not (getattr(user, 'role', None) == 'ADMIN' or user.is_superuser or user.is_staff):
+                raise forms.ValidationError("Access denied. Only administrators and staff members are allowed to log in here.")
             cleaned_data['user'] = user
         return cleaned_data
 

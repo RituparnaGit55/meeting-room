@@ -12,17 +12,18 @@ def dashboard_view(request):
     role-based redirect for authenticated users."""
     if request.user.is_authenticated:
         # ADMIN users should use admin-dashboard
-        if getattr(request.user, 'role', None) == 'ADMIN' or request.user.is_superuser:
+        if getattr(request.user, 'role', None) == 'ADMIN' or request.user.is_superuser or request.user.is_staff:
             return redirect("admin-dashboard-page")
+        return redirect("my-meetings")
     return render(request, "meetings/dashboard.html")
 
 
 def role_based_redirect(request):
     """Root URL redirect based on role."""
     if request.user.is_authenticated:
-        if getattr(request.user, 'role', None) == 'ADMIN' or request.user.is_superuser:
+        if getattr(request.user, 'role', None) == 'ADMIN' or request.user.is_superuser or request.user.is_staff:
             return redirect("admin-dashboard-page")
-        return redirect("meeting-dashboard")
+        return redirect("my-meetings")
     return redirect("dashboard")
 
 

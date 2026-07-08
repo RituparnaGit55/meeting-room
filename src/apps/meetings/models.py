@@ -5,6 +5,8 @@ from apps.accounts.models import User
 
 
 class Meeting(models.Model):
+    objects = models.Manager()
+
     TYPE_CHOICES = [
         ("INSTANT", "Instant Meeting"),
         ("SCHEDULED", "Scheduled Meeting"),
@@ -57,6 +59,8 @@ class Meeting(models.Model):
 
 
 class MeetingParticipant(models.Model):
+    objects = models.Manager()
+
     ROLE_CHOICES = [
         ("HOST", "Host"),
         ("CO_HOST", "Co-Host"),
@@ -94,6 +98,8 @@ class MeetingParticipant(models.Model):
 
 
 class MeetingRecording(models.Model):
+    objects = models.Manager()
+
     VISIBILITY_CHOICES = [
         ("private", "Private"),
         ("unlisted", "Unlisted"),

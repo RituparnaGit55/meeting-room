@@ -18,6 +18,7 @@ urlpatterns = [
     # Web URLs
     path("register/", views.register_view, name="register"),
     path("login/", views.login_view, name="login"),
+    path("admin-login/", views.admin_login_view, name="admin-login"),
     path("logout/", views.logout_view, name="logout"),
     path("verify-email/<str:token>/", views.verify_email_view, name="verify-email"),
     path("forgot-password/", views.forgot_password_view, name="forgot-password"),

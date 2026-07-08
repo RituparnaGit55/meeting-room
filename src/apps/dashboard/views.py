@@ -12,6 +12,8 @@ from apps.accounts.models import User
 
 
 class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
+    login_url = "/auth/admin-login/"
+
     def test_func(self):
         request = getattr(self, "request", None)
         if request and request.user and request.user.is_authenticated:
@@ -27,7 +29,7 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
         from django.shortcuts import redirect
         request = getattr(self, "request", None)
         if request and request.user and request.user.is_authenticated:
-            return redirect("meeting-dashboard")
+            return redirect("my-meetings")
         return super().handle_no_permission()
 
 

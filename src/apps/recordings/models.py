@@ -3,6 +3,8 @@ from apps.meetings.models import Meeting
 
 
 class Recording(models.Model):
+    objects = models.Manager()
+
     VISIBILITY_CHOICES = [
         ("private", "Private"),
         ("unlisted", "Unlisted"),
