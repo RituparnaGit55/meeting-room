@@ -12,12 +12,16 @@ SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-placeholder-key-change-me"
 
 DEBUG = True
 
+raw_allowed_hosts = os.getenv("ALLOWED_HOSTS", "")
+env_hosts = [h.strip() for h in raw_allowed_hosts.split(",") if h.strip()]
+
 ALLOWED_HOSTS = [
+    "*",
     ".vercel.app",
+    "*.vercel.app",
     "localhost",
     "127.0.0.1",
-    "*",
-]
+] + env_hosts
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
