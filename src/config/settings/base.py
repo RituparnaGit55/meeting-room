@@ -37,7 +37,6 @@ SESSION_COOKIE_SAMESITE = "Lax"
 AUTH_USER_MODEL = "accounts.User"
 
 INSTALLED_APPS = [
-    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -68,6 +67,9 @@ INSTALLED_APPS = [
     # "apps.api_keys",
     "apps.dashboard",
 ]
+
+if not IS_VERCEL:
+    INSTALLED_APPS.insert(0, "daphne")
 
 SITE_ID = 1
 
