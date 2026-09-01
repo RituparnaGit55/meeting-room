@@ -5,6 +5,7 @@ import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+IS_VERCEL = os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV") is not None
 
 load_dotenv(os.path.join(BASE_DIR.parent, ".env"))
 
