@@ -26,7 +26,7 @@
     </div>
     <div class="row">
         {% for recording in recordings %}
-        <div class="col-md-4 mb-4 fade-in-up">
+        <div class="col-md-4 mb-4 fade-in-up" id="recording-card-{{ recording.id }}">
             <div class="meeting-item">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
@@ -36,7 +36,12 @@
                         <span class="badge rounded-pill bg-danger-subtle text-danger mt-1 small" style="font-size: 0.75rem;"><i class="bi bi-youtube me-1"></i>YouTube</span>
                         {% endif %}
                     </div>
-                    <span class="badge rounded-pill" style="background: var(--warning-gradient);">{{ recording.recording_type|title }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge rounded-pill" style="background: var(--warning-gradient);">{{ recording.recording_type|title }}</span>
+                        <button class="btn btn-sm text-danger border-0 p-1 hover-scale" onclick="confirmDeleteRecording('{{ recording.id }}', '{{ recording.meeting.title|escapejs }}')" title="Delete Recording">
+                            <i class="bi bi-trash3-fill fs-5"></i>
+                        </button>
+                    </div>
                 </div>
                 <div class="d-flex gap-2 mt-3">
                     {% if recording.is_uploaded_to_youtube and recording.youtube_url %}
@@ -62,11 +67,23 @@
 
 {% block extra_js %}
 <script>
+function escapeHtml(text) {
+    if (!text) return '';
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+
 async function loadMeetings() {
     const meetingsList = document.getElementById('meetingsList');
 
     try {
-        const response = await fetch('/meetings/api/');
+        const response = await fetch('/meetings/api/', {
+            credentials: 'same-origin',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
 
         if (!response.ok) {
             if (response.status === 401 || response.status === 403) {
@@ -99,15 +116,21 @@ async function loadMeetings() {
         meetings.forEach((meeting, index) => {
             const card = document.createElement('div');
             card.className = 'col-md-6 mb-4 fade-in-up';
+            card.id = `meeting-card-${meeting.id}`;
             card.style.animationDelay = (index * 0.1) + 's';
             card.innerHTML = `
                 <div class="meeting-item">
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h5 class="fw-bold mb-1" style="color: var(--text-dark);"><i class="bi bi-calendar-check me-2 text-gradient"></i>${meeting.title}</h5>
-                            <p class="text-muted mb-0 small">${meeting.description || 'No description provided'}</p>
+                            <h5 class="fw-bold mb-1" style="color: var(--text-dark);"><i class="bi bi-calendar-check me-2 text-gradient"></i>${escapeHtml(meeting.title)}</h5>
+                            <p class="text-muted mb-0 small">${escapeHtml(meeting.description || 'No description provided')}</p>
                         </div>
-                        <span class="badge rounded-pill" style="background: var(--primary-gradient);">${meeting.meeting_type}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge rounded-pill" style="background: var(--primary-gradient);">${meeting.meeting_type}</span>
+                            <button class="btn btn-sm text-danger border-0 p-1 hover-scale" onclick="confirmDeleteMeeting(${meeting.id}, '${escapeHtml(meeting.title).replace(/'/g, "\\'")}')" title="Delete Meeting">
+                                <i class="bi bi-trash3-fill fs-5"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-6">
@@ -120,11 +143,11 @@ async function loadMeetings() {
                         </div>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="/meetings/room/${meeting.room_code}/" class="btn-gradient-primary flex-grow-1 fw-bold">
+                        <a href="/meetings/room/${meeting.room_code}/" class="btn-gradient-primary flex-grow-1 fw-bold text-center text-decoration-none">
                             <i class="bi bi-door-open me-2"></i>JOIN
                         </a>
-                        <button class="btn-outline-glass fw-bold" onclick="copyToClipboard('${meeting.room_code}')">
-                            <i class="bi bi-clipboard"></i>
+                        <button class="btn-outline-glass fw-bold px-3" onclick="copyToClipboard('${meeting.room_code}')" title="Copy Room Code">
+                            <i class="bi bi-clipboard me-1"></i> Copy
                         </button>
                     </div>
                 </div>
@@ -143,11 +166,71 @@ async function loadMeetings() {
     }
 }
 
+function confirmDeleteMeeting(meetingId, title) {
+    promptConfirmDelete({
+        title: 'Delete Meeting Room',
+        message: 'Are you sure you want to delete this meeting room? All participants will be disconnected.',
+        itemName: title,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/meetings/api/${meetingId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok || response.status === 204) {
+                    showToast('Meeting Deleted', `Meeting "${title}" was permanently deleted.`, 'danger', 6000);
+                    const card = document.getElementById(`meeting-card-${meetingId}`);
+                    if (card) card.remove();
+                    loadMeetings();
+                } else {
+                    const err = await response.json();
+                    showToast('Delete Failed', err.detail || 'Unable to delete meeting.', 'error');
+                }
+            } catch (e) {
+                showToast('Error', 'Failed to communicate with server.', 'error');
+            }
+        }
+    });
+}
+
+function confirmDeleteRecording(recordingId, title) {
+    promptConfirmDelete({
+        title: 'Delete Recording File',
+        message: 'Are you sure you want to delete this meeting recording file? This file will be deleted permanently.',
+        itemName: title,
+        onConfirm: async () => {
+            try {
+                const response = await fetch(`/meetings/api/recordings/${recordingId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    showToast('Recording Deleted', `Recording file for "${title}" has been deleted.`, 'danger', 6000);
+                    const card = document.getElementById(`recording-card-${recordingId}`);
+                    if (card) card.remove();
+                } else {
+                    showToast('Delete Failed', 'Unable to delete recording.', 'error');
+                }
+            } catch (e) {
+                showToast('Error', 'Failed to communicate with server.', 'error');
+            }
+        }
+    });
+}
+
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text).then(() => {
-        alert('Room code copied to clipboard!');
+        showToast('Copied to Clipboard', `Room code "${text}" copied successfully!`, 'info', 4000);
     }).catch(err => {
-        console.error('Failed to copy:', err);
+        showToast('Copy Failed', 'Unable to copy room code to clipboard.', 'error');
     });
 }
 

@@ -16,35 +16,29 @@ django.setup()
 
 from apps.accounts.models import User
 
-# Create admin test user with user ID 'admin' and password 'admin123'
-email = "admin"
-password = "admin123"
-
-# Also clean up old test@example.com if needed or update it
-User.objects.filter(email="test@example.com").delete()
+# Create test user
+email = "user@example.com"
+password = "user1234"
 
 user, created = User.objects.get_or_create(
     email=email,
     defaults={
-        "first_name": "Admin",
+        "first_name": "General",
         "last_name": "User",
         "is_email_verified": True,
-        "is_staff": True,
-        "is_superuser": True,
-        "role": "ADMIN",
+        "is_staff": False,
+        "is_superuser": False,
+        "role": "USER",
     }
 )
 
 user.set_password(password)
-user.first_name = "Admin"
-user.last_name = "User"
-user.is_email_verified = True
-user.is_staff = True
-user.is_superuser = True
-user.role = "ADMIN"
+# Ensure it is a general user
+user.is_staff = False
+user.is_superuser = False
+user.role = "USER"
 user.save()
 
-print("Admin user updated successfully!")
-print(f"User ID / Email: {email}")
+print("General user created/updated successfully!")
+print(f"Email: {email}")
 print(f"Password: {password}")
-

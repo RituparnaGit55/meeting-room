@@ -1,7 +1,9 @@
+from typing import TYPE_CHECKING
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
 from django.utils.crypto import get_random_string
+
 
 
 class UserManager(BaseUserManager):
@@ -30,7 +32,7 @@ class User(AbstractUser):
         ("MANAGER", "Manager"),
         ("MEMBER", "Member"),
     ]
-    username = None
+    username = None  # type: ignore
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="MEMBER")
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
@@ -44,7 +46,7 @@ class User(AbstractUser):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
-    objects = UserManager()
+    objects = UserManager()  # type: ignore
 
     def __str__(self):
         return self.email

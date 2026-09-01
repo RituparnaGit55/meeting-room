@@ -3,41 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}MeetFlow | Premium Meetings{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <title>{% block title %}MeetFlow | Premium Video Collaboration{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css';">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" onerror="this.onerror=null;this.href='https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css';">
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid px-0">
-            <a class="navbar-brand fw-semibold d-flex align-items-center gap-2" href="/">
-                <i class="bi bi-camera-video-fill" style="font-size: 1.5rem;"></i>
-                MeetFlow
+    <nav class="navbar navbar-expand-lg sticky-top">
+        <div class="container-fluid px-3 px-md-5">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="brand-icon-box">
+                    <i class="bi bi-camera-video-fill text-white fs-5"></i>
+                </div>
+                <span class="brand-text">MeetFlow</span>
             </a>
-            <div class="d-flex ms-auto align-items-center gap-4">
-                <div class="d-none d-md-flex align-items-center gap-3">
-                    <a class="nav-link fw-bold" href="{% url 'meeting-dashboard' %}">HOME</a>
+            
+            <button class="navbar-toggler border-0 shadow-none p-2" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list fs-2 text-dark"></i>
+            </button>
+
+            <div class="collapse navbar-collapse mt-3 mt-lg-0" id="mainNavbar">
+                <div class="d-flex flex-column flex-lg-row ms-auto align-items-lg-center gap-2 gap-lg-3">
+                    <a class="nav-link-pill active" href="{% url 'meeting-dashboard' %}">
+                        <i class="bi bi-grid-fill me-1"></i> Home
+                    </a>
                     {% if user.is_authenticated %}
                         {% if user.role == 'ADMIN' or user.is_superuser or user.is_staff %}
-                            <a class="nav-link fw-bold text-primary" href="{% url 'admin-dashboard-page' %}"><i class="bi bi-cpu me-1"></i>ADMIN DASHBOARD</a>
+                            <a class="nav-link-pill text-primary" href="{% url 'admin-dashboard-page' %}">
+                                <i class="bi bi-cpu me-1"></i> Admin Dashboard
+                            </a>
                         {% endif %}
-                        <a class="nav-link fw-bold" href="{% url 'my-meetings' %}">MY MEETINGS</a>
-                        <a class="nav-link fw-bold" href="{% url 'create-meeting' %}">CREATE</a>
-                        <a class="nav-link fw-bold" href="{% url 'join-meeting-page' %}">JOIN</a>
+                        <a class="nav-link-pill" href="{% url 'my-meetings' %}">
+                            <i class="bi bi-calendar-event me-1"></i> My Meetings
+                        </a>
+                        <a class="nav-link-pill" href="{% url 'create-meeting' %}">
+                            <i class="bi bi-plus-circle me-1"></i> Create
+                        </a>
+                        <a class="nav-link-pill" href="{% url 'join-meeting-page' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Join
+                        </a>
                     {% else %}
-                        <a class="nav-link fw-bold" href="{% url 'join-meeting-page' %}">JOIN</a>
+                        <a class="nav-link-pill" href="{% url 'join-meeting-page' %}">
+                            <i class="bi bi-box-arrow-in-right me-1"></i> Join Meeting
+                        </a>
                     {% endif %}
                 </div>
-                <div class="d-flex align-items-center gap-2 ms-4">
-                    <span class="text-muted small" id="currentTime"></span>
+
+                <div class="d-flex align-items-center gap-3 ms-lg-4">
+                    <span class="text-muted small fw-medium d-none d-xl-inline" id="currentTime"></span>
                     {% if user.is_authenticated %}
                         <!-- Notification Bell -->
                         <div class="position-relative" id="notifBellWrapper">
-                            <button class="btn p-2 position-relative border-0 bg-transparent" id="notifBellBtn" onclick="toggleNotifDropdown()" title="Notifications" style="transition: background 0.2s;">
-                                <i class="bi bi-bell fs-5 text-dark"></i>
+                            <button class="notif-bell-btn position-relative" id="notifBellBtn" onclick="toggleNotifDropdown()" title="Notifications">
+                                <i class="bi bi-bell fs-5"></i>
                                 <span class="notif-badge d-none" id="notifBadge">0</span>
                             </button>
                             <!-- Notification Dropdown -->
@@ -56,43 +79,200 @@
                                 </div>
                             </div>
                         </div>
-                        <a href="{% url 'profile' %}" class="text-dark p-2 rounded-2" style="transition: background 0.2s;" title="Profile">
-                            <i class="bi bi-person fs-5"></i>
+                        <a href="{% url 'profile' %}" class="btn-icon-pill p-0 overflow-hidden" title="Profile">
+                            {% if user.avatar %}
+                                <img src="{{ user.avatar.url }}" alt="{{ user.get_full_name|default:user.email }}" class="nav-avatar-img">
+                            {% else %}
+                                <i class="bi bi-person-circle fs-5"></i>
+                            {% endif %}
                         </a>
-                        <a href="{% url 'logout' %}" class="text-dark p-2 rounded-2" style="transition: background 0.2s;" title="Logout">
+                        <a href="{% url 'logout' %}" class="btn-icon-pill text-danger" title="Logout">
                             <i class="bi bi-box-arrow-right fs-5"></i>
                         </a>
                     {% else %}
-                        <a href="{% url 'login' %}" class="nav-link fw-bold">LOGIN</a>
-                        <a href="{% url 'register' %}" class="nav-link fw-bold">REGISTER</a>
+                        <a href="{% url 'login' %}" class="btn-login-pill">
+                            <i class="bi bi-shield-lock me-1"></i> Log In
+                        </a>
+                        <a href="{% url 'register' %}" class="btn-register-pill">
+                            Get Started Free <i class="bi bi-arrow-right ms-1"></i>
+                        </a>
                     {% endif %}
                 </div>
             </div>
         </div>
     </nav>
 
-    <div id="main-content-container" class="{% block content_container_class %}container mt-4{% endblock %}">
+    <!-- Ultra Creative Floating Toast Notification Container -->
+    <div class="toast-container-creative" id="appToastContainer">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                <div class="toast-creative toast-creative-{{ message.tags|default:'info' }}" id="server-toast-{{ forloop.counter }}" role="alert">
+                    <div class="toast-creative-body">
+                        <div class="toast-icon-badge">
+                            {% if message.tags == 'success' %}
+                                <i class="bi bi-check-lg fs-4"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="bi bi-exclamation-lg fs-4"></i>
+                            {% elif message.tags == 'error' or message.tags == 'danger' %}
+                                <i class="bi bi-x-lg fs-4"></i>
+                            {% else %}
+                                <i class="bi bi-info-lg fs-4"></i>
+                            {% endif %}
+                        </div>
+                        <div class="toast-content-box">
+                            <div class="toast-creative-title">{% if message.tags == 'success' %}Success!{% elif message.tags == 'error' or message.tags == 'danger' %}Error!{% elif message.tags == 'warning' %}Warning!{% else %}Info{% endif %}</div>
+                            <div class="toast-creative-desc">{{ message }}</div>
+                        </div>
+                        <button type="button" class="toast-close-btn" onclick="dismissCreativeToast('server-toast-{{ forloop.counter }}')" title="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
                 </div>
             {% endfor %}
         {% endif %}
+    </div>
+
+    <!-- Confirmation Warning Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 rounded-4 shadow-2xl overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
+                <div class="modal-body text-center p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle" style="width: 68px; height: 68px; background: rgba(225, 29, 72, 0.15); border: 1px solid rgba(225, 29, 72, 0.3); color: #f43f5e;">
+                        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                    </div>
+                    <h4 class="fw-bold mb-2 font-display text-white" id="confirmDeleteTitle">Are you sure?</h4>
+                    <p class="text-slate-300 small mb-4" id="confirmDeleteMessage">
+                        This action will permanently delete the selected item. It cannot be undone.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary w-50 py-2.5 rounded-3 fw-bold text-white border-slate-600" data-bs-dismiss="modal" id="confirmDeleteCancelBtn">
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger w-50 py-2.5 rounded-3 fw-bold shadow-lg" id="confirmDeleteSubmitBtn" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); border: none;">
+                            <i class="bi bi-trash3-fill me-1"></i> Yes, Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content-container" class="{% block content_container_class %}container mt-4{% endblock %}">
         {% block content %}{% endblock %}
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}
     <script>
+        // Dismiss Toast Animation Helper
+        function dismissCreativeToast(id) {
+            const toastEl = document.getElementById(id);
+            if (toastEl) {
+                toastEl.classList.add('hiding');
+                setTimeout(() => toastEl.remove(), 350);
+            }
+        }
+
+        // Global Creative Toast Notification Helper
+        function showToast(title, message, type = 'success', duration = 5000) {
+            const container = document.getElementById('appToastContainer');
+            if (!container) return;
+
+            const iconMap = {
+                'success': 'bi-check-lg fs-4',
+                'warning': 'bi-exclamation-lg fs-4',
+                'error': 'bi-x-lg fs-4',
+                'danger': 'bi-x-lg fs-4',
+                'info': 'bi-info-lg fs-4'
+            };
+
+            const defaultTitleMap = {
+                'success': 'Success!',
+                'warning': 'Warning!',
+                'error': 'Error!',
+                'danger': 'Error!',
+                'info': 'Info'
+            };
+
+            const toastId = 'toast-' + Date.now();
+            const icon = iconMap[type] || iconMap['info'];
+            const displayTitle = title || defaultTitleMap[type] || 'Notification';
+
+            const toastHtml = `
+                <div id="${toastId}" class="toast-creative toast-creative-${type}" role="alert">
+                    <div class="toast-creative-body">
+                        <div class="toast-icon-badge">
+                            <i class="bi ${icon}"></i>
+                        </div>
+                        <div class="toast-content-box">
+                            <div class="toast-creative-title">${escapeHtmlBase(displayTitle)}</div>
+                            <div class="toast-creative-desc">${escapeHtmlBase(message)}</div>
+                        </div>
+                        <button type="button" class="toast-close-btn" onclick="dismissCreativeToast('${toastId}')" title="Close">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.insertAdjacentHTML('beforeend', toastHtml);
+
+            // Auto dismiss after duration
+            setTimeout(() => {
+                dismissCreativeToast(toastId);
+            }, duration);
+        }
+
+        // Global Confirmation Warning Modal Helper
+        let pendingDeleteCallback = null;
+
+        function promptConfirmDelete(options) {
+            const { title = 'Confirm Deletion', message = 'Are you sure you want to delete this item? This action cannot be undone.', itemName = '', onConfirm } = options;
+
+            const titleEl = document.getElementById('confirmDeleteTitle');
+            const msgEl = document.getElementById('confirmDeleteMessage');
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message + (itemName ? ` ("${itemName}")` : '');
+
+            pendingDeleteCallback = onConfirm;
+
+            const modalEl = document.getElementById('confirmDeleteModal');
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto initialize existing server-rendered toasts
+            document.querySelectorAll('#appToastContainer .toast').forEach(toastEl => {
+                const bsToast = new bootstrap.Toast(toastEl);
+                bsToast.show();
+            });
+
+            // Handle confirm delete submit button click
+            const confirmBtn = document.getElementById('confirmDeleteSubmitBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    const modalEl = document.getElementById('confirmDeleteModal');
+                    const bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+
+                    if (pendingDeleteCallback) {
+                        pendingDeleteCallback();
+                        pendingDeleteCallback = null;
+                    }
+                });
+            }
+        });
+
         // Time display
         function updateTime() {
             const now = new Date();
             const options = { hour: '2-digit', minute: '2-digit', hour12: true, weekday: 'short', month: 'short', day: 'numeric' };
-            const timeStr = now.toLocaleString('en-US', options).replace(',', ' •');
-            document.getElementById('currentTime').textContent = timeStr;
+            const timeEl = document.getElementById('currentTime');
+            if (timeEl) {
+                const timeStr = now.toLocaleString('en-US', options).replace(',', ' •');
+                timeEl.textContent = timeStr;
+            }
         }
         updateTime();
         setInterval(updateTime, 60000);
@@ -262,6 +442,6 @@
             });
         }
     </script>
-    {% endblock %}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

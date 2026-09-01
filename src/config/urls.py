@@ -39,6 +39,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # Web URLs first
     path("auth/", include("apps.accounts.urls")),
+    path("accounts/", include("allauth.urls")),
     path("meetings/", include("apps.meetings.urls")),
     # API URLs (namespaced)
     path("api/v1/auth/", include(("apps.accounts.urls", "accounts-api"), namespace="accounts-api")),

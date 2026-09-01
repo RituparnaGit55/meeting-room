@@ -1,79 +1,117 @@
 {% extends 'base.html' %}
 
-{% block title %}MeetFlow | Login{% endblock %}
+{% block title %}MeetFlow | User Sign In{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center align-items-center min-vh-75" style="min-height: 80vh;">
-    <div class="col-md-8 col-lg-6">
-        <div class="glass-card-light p-5 fade-in-up">
+<div class="row justify-content-center align-items-center py-5 min-vh-75">
+    <div class="col-12 col-md-8 col-lg-5 col-xl-4">
+        <div class="glass-panel p-4 p-md-5 rounded-5 shadow-2xl fade-in-up">
             <div class="text-center mb-4">
-                <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; border-radius: 24px; background: var(--primary-gradient);">
-                    <i class="bi bi-camera-video text-white" style="font-size: 2.5rem;"></i>
+                <div class="d-inline-flex align-items-center justify-content-center mb-3 brand-icon-badge shadow-lg">
+                    <i class="bi bi-camera-video-fill text-white fs-3"></i>
                 </div>
-                <h2 class="text-gradient fw-bold">Welcome Back!</h2>
-                <p class="text-muted mt-2">Sign in to continue your meetings</p>
+                <h2 class="fw-bold text-dark mb-1">Welcome Back!</h2>
+                <p class="text-secondary small">Sign in to your account to join meetings</p>
             </div>
             
             {% if form.errors %}
-                <div class="alert alert-danger fade-in-up delay-1">
+                <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4 fade-in-up small">
+                    <div class="d-flex align-items-center gap-2 fw-bold mb-1">
+                        <i class="bi bi-exclamation-triangle-fill"></i> Invalid Credentials
+                    </div>
                     {% for field in form %}
                         {% for error in field.errors %}
-                            {{ error }}
+                            <div class="small">{{ error }}</div>
                         {% endfor %}
                     {% endfor %}
                     {% for error in form.non_field_errors %}
-                        {{ error }}
+                        <div class="small">{{ error }}</div>
                     {% endfor %}
                 </div>
             {% endif %}
             
-            <form method="post" class="fade-in-up delay-2">
+            <form method="post" class="fade-in-up delay-1">
                 {% csrf_token %}
                 
-                <div class="mb-4">
-                    <label class="form-label">
-                        <i class="bi bi-envelope me-2"></i>Email Address
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">
+                        <i class="bi bi-envelope me-1 text-primary"></i> Email Address
                     </label>
-                    {{ form.email }}
-                </div>
-                
-                <div class="mb-4">
-                    <label class="form-label">
-                        <i class="bi bi-lock me-2"></i>Password
-                    </label>
-                    {{ form.password }}
-                </div>
-                
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="form-check">
-                        <input type="checkbox" class="form-check-input" id="remember">
-                        <label class="form-check-label" for="remember" style="color: var(--text-dark);">Remember Me</label>
+                    <div class="input-group-custom">
+                        {{ form.email }}
                     </div>
-                    <a href="{% url 'forgot-password' %}" class="text-decoration-none text-gradient fw-semibold">
-                        Forgot Password?
-                    </a>
                 </div>
                 
-                <button type="submit" class="btn-gradient-primary w-100 py-3 fs-5">
-                    <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                <div class="mb-3">
+                    <label class="form-label text-dark fw-semibold small mb-1">
+                        <i class="bi bi-lock me-1 text-primary"></i> Password
+                    </label>
+                    <div class="position-relative">
+                        <input type="password" name="password" class="form-control form-control-auth pe-5" id="loginPasswordInput" placeholder="Enter password" required>
+                        <button type="button" class="btn border-0 position-absolute end-0 top-50 translate-middle-y text-secondary px-3" onclick="togglePasswordVisibility('loginPasswordInput', this)" title="Show/Hide Password">
+                            <i class="bi bi-eye-slash fs-6"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" id="rememberMeCheck">
+                        <label class="form-check-label text-secondary small fw-medium" for="rememberMeCheck">
+                            Remember Me
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-hero-primary w-100 py-3 rounded-4 font-display fw-bold fs-6 mb-3 shadow-lg">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
                 </button>
             </form>
+
+            <div class="d-flex align-items-center my-3">
+                <hr class="flex-grow-1 border-slate-300 opacity-25">
+                <span class="px-3 text-secondary small fw-semibold text-uppercase">OR</span>
+                <hr class="flex-grow-1 border-slate-300 opacity-25">
+            </div>
+
+            <a href="{% url 'google_login' %}" class="btn btn-outline-dark w-100 py-3 rounded-4 font-display fw-semibold fs-6 mb-3 d-flex align-items-center justify-content-center gap-2 shadow-sm bg-white hover-lift text-dark border-slate-300">
+                <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.259h2.908c1.702-1.567 2.684-3.874 2.684-6.617z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+                <span>Continue with Google</span>
+            </a>
+
+
             
-            <div class="text-center mt-4 fade-in-up delay-3">
-                <div class="mb-2">
-                    <span class="text-muted">Don't have an account?</span>
-                    <a href="{% url 'register' %}" class="ms-2 text-decoration-none fw-bold text-gradient">
-                        Create Account
-                    </a>
-                </div>
-                <div class="mt-2 pt-2 border-top border-light-subtle">
-                    <span class="text-muted">Are you an Administrator?</span>
-                    <a href="{% url 'admin-login' %}" class="ms-2 text-decoration-none fw-bold text-gradient">
-                        Go to Admin Login
-                    </a>
-                </div>
+            <div class="text-center mt-3 pt-3 border-top border-slate-200 fade-in-up delay-2">
+                <span class="text-secondary small">Don't have an account?</span>
+                <a href="{% url 'register' %}" class="ms-1 fw-bold text-primary text-decoration-none hover-primary">
+                    Create Account
+                </a>
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    }
+}
+</script>
+{% endblock %}
+

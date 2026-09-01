@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MeetFlow | Executive Admin Portal{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        :root {
+            --admin-bg-dark: #070a12;
+            --admin-card-bg: rgba(15, 23, 42, 0.75);
+            --admin-card-border: rgba(255, 255, 255, 0.08);
+            --admin-accent: #6366f1;
+            --admin-accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --admin-glow: rgba(99, 102, 241, 0.25);
+            --admin-text-main: #f8fafc;
+            --admin-text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--admin-bg-dark);
+            color: var(--admin-text-main);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Animated Mesh Background */
+        .admin-mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.9) 0%, #070a12 100%);
+            pointer-events: none;
+        }
+
+        /* Glassmorphic Admin Card */
+        .admin-glass-card {
+            background: var(--admin-card-bg);
+            border: 1px solid var(--admin-card-border);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 1.25rem;
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.6), 0 0 25px var(--admin-glow);
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+
+        .admin-glass-card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+        }
+
+        /* Modern Form Control */
+        .admin-form-control {
+            background: rgba(15, 23, 42, 0.6) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #ffffff !important;
+            border-radius: 0.75rem !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.92rem;
+            transition: all 0.25s ease;
+        }
+
+        .admin-form-control:focus {
+            background: rgba(15, 23, 42, 0.9) !important;
+            border-color: var(--admin-accent) !important;
+            box-shadow: 0 0 0 4px var(--admin-glow) !important;
+            color: #ffffff !important;
+        }
+
+        .admin-form-control::placeholder {
+            color: #64748b !important;
+        }
+
+        /* Buttons */
+        .btn-admin-primary {
+            background: var(--admin-accent-gradient);
+            border: none;
+            color: #ffffff;
+            font-weight: 700;
+            border-radius: 0.75rem;
+            padding: 0.65rem 1.35rem;
+            letter-spacing: 0.3px;
+            transition: all 0.25s ease;
+            box-shadow: 0 4px 18px rgba(99, 102, 241, 0.35);
+        }
+
+        .btn-admin-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(168, 85, 247, 0.45);
+            color: #ffffff;
+        }
+
+        /* Security Shield Branding Badge */
+        .admin-shield-badge {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: var(--admin-accent-gradient);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            position: relative;
+        }
+
+        /* Admin Sidebar Layout */
+        .admin-layout-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .admin-sidebar {
+            width: 275px;
+            background: rgba(11, 15, 25, 0.95);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1045;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .admin-content-area {
+            flex: 1;
+            margin-left: 275px;
+            padding: 2rem;
+            min-height: 100vh;
+            max-width: calc(100vw - 275px);
+        }
+
+        .sidebar-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1040;
+        }
+
+        @media (max-width: 991.98px) {
+            .admin-sidebar {
+                transform: translateX(-100%);
+            }
+
+            .admin-sidebar.show {
+                transform: translateX(0);
+            }
+
+            .sidebar-backdrop.show {
+                display: block;
+            }
+
+            .admin-content-area {
+                margin-left: 0;
+                padding: 1.25rem;
+                max-width: 100vw;
+            }
+        }
+
+        .admin-nav-item {
+            color: #94a3b8;
+            padding: 0.75rem 1.15rem;
+            border-radius: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+            font-weight: 600;
+            font-size: 0.92rem;
+            text-decoration: none;
+            margin-bottom: 0.35rem;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+        }
+
+        .admin-nav-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .admin-nav-item.active {
+            color: #ffffff;
+            background: rgba(99, 102, 241, 0.16);
+            border-left-color: var(--admin-accent);
+        }
+
+        .admin-nav-item i {
+            font-size: 1.15rem;
+        }
+
+        /* High Contrast Custom Badges with Specificity Overrides */
+        .badge.badge-admin {
+            background-color: rgba(139, 92, 246, 0.22) !important;
+            color: #ddd6fe !important;
+            border: 1px solid rgba(139, 92, 246, 0.5) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-manager {
+            background-color: rgba(14, 165, 233, 0.22) !important;
+            color: #7dd3fc !important;
+            border: 1px solid rgba(14, 165, 233, 0.5) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-member {
+            background-color: rgba(148, 163, 184, 0.18) !important;
+            color: #e2e8f0 !important;
+            border: 1px solid rgba(148, 163, 184, 0.35) !important;
+            font-weight: 600 !important;
+        }
+
+        .badge.badge-active {
+            background-color: rgba(16, 185, 129, 0.22) !important;
+            color: #6ee7b7 !important;
+            border: 1px solid rgba(16, 185, 129, 0.45) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-disabled {
+            background-color: rgba(239, 68, 68, 0.22) !important;
+            color: #fca5a5 !important;
+            border: 1px solid rgba(239, 68, 68, 0.45) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-scheduled {
+            background-color: rgba(99, 102, 241, 0.22) !important;
+            color: #c7d2fe !important;
+            border: 1px solid rgba(99, 102, 241, 0.45) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-in-progress {
+            background-color: rgba(16, 185, 129, 0.25) !important;
+            color: #34d399 !important;
+            border: 1px solid rgba(16, 185, 129, 0.5) !important;
+            font-weight: 700 !important;
+        }
+
+        .badge.badge-completed {
+            background-color: rgba(148, 163, 184, 0.2) !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(148, 163, 184, 0.35) !important;
+            font-weight: 600 !important;
+        }
+
+        .badge.badge-cancelled {
+            background-color: rgba(239, 68, 68, 0.22) !important;
+            color: #fca5a5 !important;
+            border: 1px solid rgba(239, 68, 68, 0.45) !important;
+            font-weight: 700 !important;
+        }
+
+        /* Section Tab Display */
+        .admin-tab-section {
+            display: none;
+            animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .admin-tab-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Floating Toast Container */
+        .toast-container-creative {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1090;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+            width: 100%;
+        }
+
+        .toast-creative {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-radius: 1rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.35s ease;
+        }
+
+        .toast-creative-success { border-left: 4px solid #10b981; }
+        .toast-creative-warning { border-left: 4px solid #f59e0b; }
+        .toast-creative-error, .toast-creative-danger { border-left: 4px solid #ef4444; }
+        .toast-creative-info { border-left: 4px solid #3b82f6; }
+
+        .toast-creative-title { font-weight: 700; font-size: 0.95rem; }
+        .toast-creative-desc { font-size: 0.85rem; color: #cbd5e1; }
+
+        .bg-gradient-purple {
+            background: var(--admin-accent-gradient);
+        }
+
+        .extra-small {
+            font-size: 0.75rem;
+        }
+        
+        .tracking-wider {
+            letter-spacing: 0.08em;
+        }
+
+        /* Table Enhancements */
+        .table-dark-custom {
+            --bs-table-bg: transparent;
+            --bs-table-color: #cbd5e1;
+            border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        .table-dark-custom th {
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <div class="admin-mesh-bg"></div>
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar()"></div>
+
+    <!-- Floating Toast Notifications -->
+    <div class="toast-container-creative" id="appToastContainer">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast-creative toast-creative-{{ message.tags|default:'info' }}" id="admin-server-toast-{{ forloop.counter }}">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div>
+                            <div class="toast-creative-title">
+                                {% if message.tags == 'success' %}Success{% elif message.tags == 'error' or message.tags == 'danger' %}Error{% elif message.tags == 'warning' %}Notice{% else %}Info{% endif %}
+                            </div>
+                            <div class="toast-creative-desc">{{ message }}</div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" onclick="dismissCreativeToast('admin-server-toast-{{ forloop.counter }}')"></button>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content border-0 rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
+                <div class="modal-body text-center p-4">
+                    <div class="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle" style="width: 64px; height: 64px; background: rgba(225, 29, 72, 0.15); border: 1px solid rgba(225, 29, 72, 0.3); color: #f43f5e;">
+                        <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2 text-white" id="confirmDeleteTitle">Are you sure?</h5>
+                    <p class="text-secondary small mb-4" id="confirmDeleteMessage">
+                        This action will permanently delete the selected item.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary w-50 py-2 rounded-3 fw-bold text-white border-secondary opacity-75" data-bs-dismiss="modal">
+                            Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger w-50 py-2 rounded-3 fw-bold" id="confirmDeleteSubmitBtn" style="background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); border: none;">
+                            <i class="bi bi-trash3-fill me-1"></i> Confirm Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function escapeHtmlBase(text) {
+            if (!text) return '';
+            const d = document.createElement('div');
+            d.textContent = text;
+            return d.innerHTML;
+        }
+
+        function dismissCreativeToast(id) {
+            const toastEl = document.getElementById(id);
+            if (toastEl) {
+                toastEl.style.opacity = '0';
+                toastEl.style.transform = 'translateY(-10px)';
+                setTimeout(() => toastEl.remove(), 300);
+            }
+        }
+
+        function showToast(title, message, type = 'success', duration = 4000) {
+            const container = document.getElementById('appToastContainer');
+            if (!container) return;
+
+            const toastId = 'toast-' + Date.now();
+            const toastHtml = `
+                <div id="${toastId}" class="toast-creative toast-creative-${type}">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div>
+                            <div class="toast-creative-title">${escapeHtmlBase(title)}</div>
+                            <div class="toast-creative-desc">${escapeHtmlBase(message)}</div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white ms-2" onclick="dismissCreativeToast('${toastId}')"></button>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', toastHtml);
+            setTimeout(() => dismissCreativeToast(toastId), duration);
+        }
+
+        let pendingDeleteCallback = null;
+        function promptConfirmDelete(options) {
+            const { title = 'Confirm Deletion', message = 'Are you sure?', itemName = '', onConfirm } = options;
+            const titleEl = document.getElementById('confirmDeleteTitle');
+            const msgEl = document.getElementById('confirmDeleteMessage');
+            if (titleEl) titleEl.textContent = title;
+            if (msgEl) msgEl.textContent = message + (itemName ? ` ("${itemName}")` : '');
+
+            pendingDeleteCallback = onConfirm;
+            const modalEl = document.getElementById('confirmDeleteModal');
+            const bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const confirmBtn = document.getElementById('confirmDeleteSubmitBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    const modalEl = document.getElementById('confirmDeleteModal');
+                    const bsModal = bootstrap.Modal.getInstance(modalEl);
+                    if (bsModal) bsModal.hide();
+
+                    if (pendingDeleteCallback) {
+                        pendingDeleteCallback();
+                        pendingDeleteCallback = null;
+                    }
+                });
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

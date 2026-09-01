@@ -1,5 +1,6 @@
 from typing import cast, Any
 from rest_framework import generics, status, viewsets
+from rest_framework.views import APIView
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -175,6 +176,17 @@ class UploadRecordingView(generics.CreateAPIView):
         )
 
 
+class DeleteRecordingView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        recording = get_object_or_404(MeetingRecording, pk=pk)
+        if recording.meeting.host != request.user and not request.user.is_superuser and getattr(request.user, 'role', None) != 'ADMIN':
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        recording.delete()
+        return Response({"message": "Recording deleted successfully"}, status=status.HTTP_200_OK)
+
+
 class JoinMeetingAPIView(generics.GenericAPIView):
     authentication_classes = [SessionAuthentication]
     permission_classes = [AllowAny]
@@ -225,7 +237,7 @@ class CreateMeetingView(LoginRequiredMixin, TemplateView):
     template_name = 'meetings/create.html'
 
 
-class MeetingRoomView(TemplateView):
+class MeetingRoomView(LoginRequiredMixin, TemplateView):
     template_name = 'meetings/room.html'
     
     def get_context_data(self, **kwargs):
@@ -287,7 +299,7 @@ class MeetingRoomView(TemplateView):
         return context
 
 
-class JoinMeetingPageView(TemplateView):
+class JoinMeetingPageView(LoginRequiredMixin, TemplateView):
     template_name = 'meetings/join.html'
 
     def get_context_data(self, **kwargs):

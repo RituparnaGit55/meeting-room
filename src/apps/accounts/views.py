@@ -204,7 +204,6 @@ def register_view(request):
                     password=form.cleaned_data["password"],
                     first_name=form.cleaned_data["first_name"],
                     last_name=form.cleaned_data["last_name"],
-                    department=form.cleaned_data.get("department"),
                     phone=form.cleaned_data.get("phone"),
                 )
                 messages.success(request, "Registration successful! You can now login.")
@@ -218,7 +217,7 @@ def register_view(request):
 
 def _get_role_redirect(user):
     """Return the correct dashboard URL name based on user role."""
-    if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser:
+    if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser or getattr(user, 'is_staff', False):
         return "admin-dashboard-page"
     return "my-meetings"
 

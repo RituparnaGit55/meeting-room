@@ -1,14 +1,42 @@
-// Custom JavaScript for Meeting Platform
+function escapeHtmlBase(text) {
+    if (!text) return '';
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+}
+window.escapeHtmlBase = escapeHtmlBase;
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Meeting Platform loaded');
-    
-    // Auto-dismiss alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
+    console.log('MeetFlow platform loaded with Notification Toast & Confirmation Modal system');
+
+    // Delegate click for any element with data-confirm-delete="true"
+    document.body.addEventListener('click', function(e) {
+        const deleteBtn = e.target.closest('[data-confirm-delete="true"]');
+        if (deleteBtn) {
+            e.preventDefault();
+            const itemName = deleteBtn.getAttribute('data-item-name') || '';
+            const title = deleteBtn.getAttribute('data-confirm-title') || 'Confirm Deletion';
+            const message = deleteBtn.getAttribute('data-confirm-message') || 'Are you sure you want to delete this item? This action cannot be undone.';
+            
+            if (typeof promptConfirmDelete === 'function') {
+                promptConfirmDelete({
+                    title: title,
+                    message: message,
+                    itemName: itemName,
+                    onConfirm: () => {
+                        const form = deleteBtn.closest('form');
+                        if (form) {
+                            form.submit();
+                        } else if (deleteBtn.href) {
+                            window.location.href = deleteBtn.href;
+                        }
+                    }
+                });
+            } else if (confirm(`${message} ${itemName ? `("${itemName}")` : ''}`)) {
+                const form = deleteBtn.closest('form');
+                if (form) form.submit();
+                else if (deleteBtn.href) window.location.href = deleteBtn.href;
+            }
+        }
     });
 });

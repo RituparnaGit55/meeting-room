@@ -1,189 +1,344 @@
 {% extends 'base.html' %}
 
-{% block title %}MeetFlow | Premium Meetings{% endblock %}
+{% block title %}MeetFlow | Reimagined Video Collaboration & AI Summaries{% endblock %}
+
+{% block content_container_class %}container-fluid p-0{% endblock %}
 
 {% block content %}
-<div class="hero-section">
-    <div class="container-fluid px-4">
-        <div class="row align-items-center g-5">
+<!-- Hero Section -->
+<section class="hero-wrapper position-relative overflow-hidden py-5 py-lg-6">
+    <div class="hero-ambient-mesh"></div>
+    <div class="hero-orb hero-orb-1"></div>
+    <div class="hero-orb hero-orb-2"></div>
+    
+    <div class="container px-4 px-md-5 position-relative z-1">
+        <div class="row align-items-center g-5 min-vh-75">
             <div class="col-lg-6 fade-in-up">
-                <div class="mb-4">
-                    <span class="badge rounded-pill px-4 py-2" style="background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 1px solid #667eea30; color: #667eea; font-weight: 600; font-size: 0.9rem;">
-                        <i class="bi bi-rocket-takeoff-fill me-2"></i>
-                        Next-gen Video Meetings
-                    </span>
+                <div class="d-inline-flex align-items-center gap-2 mb-3 px-3 py-2 rounded-pill hero-badge-pill">
+                    <span class="pulse-dot"></span>
+                    <span class="hero-badge-text"><i class="bi bi-stars me-1 text-warning"></i> Next-Gen Video Meetings Platform</span>
                 </div>
                 
-                <h1 class="hero-title">
-                Experience Meetings<br>
-                Reimagined for <span style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Modern Teams</span>
-            </h1>
+                <h1 class="hero-main-title">
+                    Experience Meetings<br>
+                    <span class="hero-gradient-text">Reimagined for</span> <span class="hero-gradient-text-alt">Modern Teams</span>
+                </h1>
                 
-                <p class="hero-subtitle">
-                    MeetFlow transforms how teams connect with crystal-clear video, 
-                    AI-powered features, and seamless collaboration - all wrapped in 
-                    a beautiful, intuitive interface.
+                <p class="hero-lead-text">
+                    MeetFlow transforms how distributed teams connect—combining crystal-clear HD WebRTC video, 
+                    instant AI transcriptions, smart executive summaries, and real-time chat in one unified workspace.
                 </p>
                 
-                <div class="d-flex gap-3 mb-5 flex-wrap">
-                    <a href="{% url 'create-meeting' %}" class="btn-primary-custom d-flex align-items-center fw-bold">
-                        <i class="bi bi-video-camera me-2"></i>
-                        START FREE MEETING
+                <!-- Hero Action Group -->
+                <div class="d-flex flex-column flex-sm-row gap-3 mb-4">
+                    <a href="{% url 'create-meeting' %}" class="btn-hero-primary d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-camera-video-fill fs-5"></i>
+                        <span>Start Instant Meeting</span>
                     </a>
-                    <div class="join-input-group d-flex rounded-3">
-                        <input type="text" class="join-input flex-grow-1 border-0" id="joinCodeInput" placeholder="Enter meeting code">
-                        <a href="{% url 'join-meeting-page' %}" class="btn-join fw-bold">JOIN</a>
-                    </div>
                 </div>
                 
-                <div class="divider"></div>
-                
-                <div class="d-flex flex-wrap gap-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-check-circle-fill fs-4" style="color: #10b981;"></i>
-                        <span class="fw-semibold" style="color: var(--text-secondary);">End-to-end encrypted</span>
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    <div class="hero-trust-badge d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-check text-success fs-6"></i>
+                        <span>End-to-End Encrypted</span>
                     </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-people-fill fs-4" style="color: #3b82f6;"></i>
-                        <span class="fw-semibold" style="color: var(--text-secondary);">Up to 100 participants</span>
+                    <div class="hero-trust-badge d-flex align-items-center gap-2">
+                        <i class="bi bi-lightning-charge-fill text-warning fs-6"></i>
+                        <span>&lt; 50ms Ultra-Low Latency</span>
+                    </div>
+                    <div class="hero-trust-badge d-flex align-items-center gap-2">
+                        <i class="bi bi-people-fill text-primary fs-6"></i>
+                        <span>Up to 100 Participants</span>
                     </div>
                 </div>
             </div>
             
+            <!-- Hero Video Card Showcase -->
             <div class="col-lg-6 fade-in-up delay-2">
-                <div class="text-center">
-                    <div class="d-inline-block position-relative">
-                        <div class="meeting-image-card">
-                            <img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=600&h=400&fit=crop&crop=face" alt="Meeting" class="rounded-3" style="width: 100%; max-width: 540px;">
-                        </div>
-                        
-                        <div class="position-absolute" style="top: 20px; left: -20px;">
-                            <div class="live-badge">
-                                <span class="live-dot"></span>
-                                LIVE NOW
-                            </div>
-                        </div>
-                        
-                        <div class="position-absolute" style="bottom: 20px; right: -20px;">
-                            <div class="d-flex align-items-center gap-3 bg-white rounded-3 px-4 py-3 shadow-lg">
-                                <div class="d-flex -ms-2">
-                                    <div class="joined-avatar" style="z-index: 3;">JD</div>
-                                    <div class="joined-avatar ms-n3" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); z-index: 2;">MK</div>
-                                    <div class="joined-avatar ms-n3" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); z-index: 1;">SJ</div>
+                <div class="hero-preview-container position-relative">
+                    <div class="hero-preview-card glass-panel p-3 rounded-4 shadow-2xl">
+                        <div class="hero-video-frame position-relative overflow-hidden rounded-3">
+                            <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&h=520&fit=crop&crop=faces" alt="Live Meeting Preview" class="img-fluid w-100 object-fit-cover rounded-3 hero-img-glow">
+                            <div class="hero-video-overlay d-flex flex-column justify-content-between p-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="badge-live-now">
+                                        <span class="live-dot-blink"></span> LIVE SESSION
+                                    </span>
+                                    <span class="badge bg-dark bg-opacity-75 text-white px-2 py-1 rounded-2 small font-monospace">
+                                        <i class="bi bi-lock-fill text-success me-1"></i> HD 1080p
+                                    </span>
                                 </div>
-                                <div class="text-start">
-                                    <div class="fw-bold" style="font-size: 0.85rem; color: var(--text-dark);">+12 participants</div>
-                                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Active now</div>
+                                <div class="d-flex justify-content-between align-items-end">
+                                    <div class="speaker-pill px-3 py-1 bg-dark bg-opacity-75 text-white rounded-pill small d-flex align-items-center gap-2">
+                                        <i class="bi bi-mic-fill text-success"></i> Sarah Jenkins (Host)
+                                    </div>
+                                    <div class="wave-animation d-flex align-items-center gap-1">
+                                        <span class="bar bar-1"></span>
+                                        <span class="bar bar-2"></span>
+                                        <span class="bar bar-3"></span>
+                                        <span class="bar bar-4"></span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="position-absolute" style="top: 50%; right: -30px; transform: translateY(-50%);">
-                            <div class="bg-white rounded-2 px-3 py-2 shadow-lg d-flex align-items-center gap-2" style="animation: float 3s ease-in-out infinite;">
-                                <i class="bi bi-chat-dots-fill" style="color: #8b5cf6; font-size: 1.2rem;"></i>
-                                <span class="fw-semibold" style="font-size: 0.8rem; color: var(--text-dark);">Great idea!</span>
+                        <!-- Floating Micro Widgets -->
+                        <div class="floating-widget widget-participants shadow-lg glass-panel-light p-3 rounded-3">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-group d-flex">
+                                    <div class="avatar-circle bg-primary text-white">JD</div>
+                                    <div class="avatar-circle bg-info text-white ms-n2">MK</div>
+                                    <div class="avatar-circle bg-warning text-white ms-n2">SJ</div>
+                                    <div class="avatar-circle bg-purple text-white ms-n2">+9</div>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-dark small">12 Participants</div>
+                                    <div class="text-success extra-small fw-semibold"><i class="bi bi-circle-fill me-1" style="font-size:0.5rem;"></i> Active Now</div>
+                                </div>
                             </div>
+                        </div>
+                        
+                        <div class="floating-widget widget-chat shadow-lg glass-panel-light px-3 py-2 rounded-3 d-flex align-items-center gap-2">
+                            <i class="bi bi-chat-quote-fill text-purple fs-5"></i>
+                            <span class="fw-semibold text-dark small">"AI Summary ready in 30s!"</span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<div class="container-fluid px-4 mb-5">
-    <div class="text-center mb-5 fade-in-up">
-        <h2 class="fw-bold" style="font-size: 2.2rem; color: var(--text-dark);">Everything You Need</h2>
-        <p class="text-muted mt-2" style="font-size: 1.1rem;">Powerful features for seamless collaboration</p>
-    </div>
-    
-    <div class="row g-4">
-        <div class="col-lg-6 fade-in-up delay-1">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-shield-lock text-white"></i>
+<!-- Trust Metrics Bar -->
+<section class="py-5 bg-slate-50 border-y-glass position-relative z-1">
+    <div class="container px-4 px-md-5">
+        <div class="row g-4 justify-content-center text-center">
+            <!-- Card 1: Uptime -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="stat-card-glass d-flex flex-column align-items-center justify-content-center">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 extra-small fw-bold mb-2">
+                        <i class="bi bi-circle-fill me-1" style="font-size:0.45rem;"></i> LIVE
+                    </span>
+                    <div class="stat-val-text text-primary mb-1">99.9%</div>
+                    <div class="text-secondary extra-small fw-bold tracking-wider text-uppercase">Uptime Reliability</div>
                 </div>
-                <div class="feature-title">Enterprise-Grade Security</div>
-                <p class="feature-desc">
-                    Your meetings are protected with end-to-end encryption and enterprise-level security protocols. Your privacy is our priority.
-                </p>
             </div>
-        </div>
-        
-        <div class="col-lg-6 fade-in-up delay-2">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-people text-white"></i>
+            
+            <!-- Card 2: Meetings Hosted -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="stat-card-glass d-flex flex-column align-items-center justify-content-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3 mb-2" style="width: 40px; height: 40px;">
+                        <i class="bi bi-camera-video-fill fs-5"></i>
+                    </div>
+                    <div class="stat-val-text text-purple mb-1" style="color: #7c3aed !important;">100k+</div>
+                    <div class="text-secondary extra-small fw-bold tracking-wider text-uppercase">Meetings Hosted</div>
                 </div>
-                <div class="feature-title">Scale with Confidence</div>
-                <p class="feature-desc">
-                    Host up to 100 participants with crystal-clear video quality, perfect for teams of all sizes and important meetings.
-                </p>
             </div>
-        </div>
-        
-        <div class="col-lg-6 fade-in-up delay-3">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-phone text-white"></i>
+            
+            <!-- Card 3: Global Latency -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="stat-card-glass d-flex flex-column align-items-center justify-content-center">
+                    <span class="badge bg-emerald-subtle text-success border border-success-subtle rounded-pill px-3 py-1 extra-small fw-bold mb-2" style="background-color: #d1fae5 !important; color: #059669 !important;">
+                        Low Latency
+                    </span>
+                    <div class="stat-val-text mb-1" style="color: #059669 !important;">50ms</div>
+                    <div class="text-secondary extra-small fw-bold tracking-wider text-uppercase">Global Latency</div>
                 </div>
-                <div class="feature-title">Device Agnostic</div>
-                <p class="feature-desc">
-                    Join from anywhere on any device - browser, mobile, or desktop. Your meetings go where you go.
-                </p>
             </div>
-        </div>
-        
-        <div class="col-lg-6 fade-in-up delay-4">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <i class="bi bi-magic text-white"></i>
+            
+            <!-- Card 4: User Satisfaction -->
+            <div class="col-12 col-sm-6 col-lg-3">
+                <div class="stat-card-glass d-flex flex-column align-items-center justify-content-center">
+                    <div class="text-warning mb-2" style="color: #d97706 !important;">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-half"></i>
+                    </div>
+                    <div class="stat-val-text mb-1" style="color: #d97706 !important;">4.9 / 5</div>
+                    <div class="text-secondary extra-small fw-bold tracking-wider text-uppercase">User Satisfaction</div>
                 </div>
-                <div class="feature-title">AI-Powered Collaboration</div>
-                <p class="feature-desc">
-                    Share screens, chat in real-time, and use advanced collaboration features to bring your team together effortlessly.
-                </p>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<footer class="footer">
-    <div class="container-fluid px-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-            <div class="footer-links d-flex gap-4 align-items-center">
-                <span class="fw-bold" style="background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">MeetFlow</span>
-                <a href="#">Privacy</a>
-                <a href="#">Terms</a>
-                <a href="#">Help Center</a>
+<!-- Features Grid -->
+<section class="py-6 position-relative">
+    <div class="container px-4 px-md-5">
+        <div class="text-center max-w-2xl mx-auto mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider small">Everything You Need</span>
+            <h2 class="display-6 fw-bold text-dark mt-2 mb-3">Engineered for High-Impact Teamwork</h2>
+            <p class="text-secondary lead fs-6">
+                From instant browser video calls to automated AI action items, MeetFlow brings every tool together in one elegant interface.
+            </p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4 fade-in-up delay-1">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-blue text-white mb-4">
+                        <i class="bi bi-shield-lock-fill fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Enterprise Security</h3>
+                    <p class="text-secondary small mb-0">
+                        End-to-end encrypted WebRTC peer media, password-protected rooms, and strict role-based access control.
+                    </p>
+                </div>
             </div>
-            <div class="footer-copyright d-flex align-items-center gap-3">
+            
+            <div class="col-md-6 col-lg-4 fade-in-up delay-2">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-purple text-white mb-4">
+                        <i class="bi bi-magic fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">AI Transcripts & Summaries</h3>
+                    <p class="text-secondary small mb-0">
+                        Automatic speech-to-text transcriptions, bulleted executive summaries, and action item detection.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 fade-in-up delay-3">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-emerald text-white mb-4">
+                        <i class="bi bi-camera-reels-fill fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Ultra-HD Video & Screen Share</h3>
+                    <p class="text-secondary small mb-0">
+                        Adaptive bitrate streaming ensures crystal-clear video and high-frame-rate desktop screen sharing.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 fade-in-up delay-1">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-amber text-white mb-4">
+                        <i class="bi bi-chat-left-dots-fill fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Real-time WebSocket Chat</h3>
+                    <p class="text-secondary small mb-0">
+                        In-meeting live messaging, code snippet sharing, and file attachments delivered instantly.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 fade-in-up delay-2">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-rose text-white mb-4">
+                        <i class="bi bi-phone-vibrate-fill fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Zero Download Needed</h3>
+                    <p class="text-secondary small mb-0">
+                        100% web-native. Join instantly from any desktop or mobile browser without installing plugins.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 fade-in-up delay-3">
+                <div class="feature-card-modern h-100 p-4 rounded-4 glass-panel position-relative overflow-hidden">
+                    <div class="feature-icon-badge bg-gradient-cyan text-white mb-4">
+                        <i class="bi bi-kanban-fill fs-4"></i>
+                    </div>
+                    <h3 class="h5 fw-bold text-dark mb-2">Integrated Task Tracking</h3>
+                    <p class="text-secondary small mb-0">
+                        Turn meeting decisions directly into assigned tasks with due dates and real-time status updates.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action (CTA) Section -->
+<section class="py-6 px-4">
+    <div class="container max-w-5xl">
+        <div class="cta-banner-glass p-5 rounded-5 position-relative overflow-hidden text-center text-lg-start">
+            <div class="row align-items-center g-4">
+                <div class="col-lg-8">
+                    <h2 class="display-6 fw-bold text-white mb-3">Ready to Elevate Your Meetings?</h2>
+                    <p class="text-white text-opacity-80 mb-0 fs-5">
+                        Start hosting friction-free, AI-assisted video meetings in under 5 seconds. No credit card required.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{% url 'create-meeting' %}" class="btn btn-light btn-lg rounded-pill px-4 py-3 fw-bold text-primary shadow-lg hover-scale">
+                        <i class="bi bi-rocket-takeoff-fill me-2"></i> Start Meeting Free
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modern Footer -->
+<footer class="footer-modern py-5 mt-4">
+    <div class="container px-4 px-md-5">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <div class="brand-icon-box">
+                        <i class="bi bi-camera-video-fill text-white fs-6"></i>
+                    </div>
+                    <span class="fw-bold fs-5 text-dark">MeetFlow</span>
+                </div>
+                <p class="text-muted small max-w-xs mb-3">
+                    Next-generation open video collaboration platform designed for high-performance remote and hybrid teams.
+                </p>
+                <div class="d-flex gap-3 text-muted">
+                    <a href="#" class="text-secondary hover-primary"><i class="bi bi-twitter-x fs-5"></i></a>
+                    <a href="#" class="text-secondary hover-primary"><i class="bi bi-github fs-5"></i></a>
+                    <a href="#" class="text-secondary hover-primary"><i class="bi bi-linkedin fs-5"></i></a>
+                </div>
+            </div>
+            
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold text-dark mb-3">Product</h6>
+                <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                    <li><a href="{% url 'create-meeting' %}" class="text-secondary text-decoration-none hover-primary">Start Meeting</a></li>
+                    <li><a href="{% url 'join-meeting-page' %}" class="text-secondary text-decoration-none hover-primary">Join Room</a></li>
+                    <li><a href="{% url 'my-meetings' %}" class="text-secondary text-decoration-none hover-primary">My Meetings</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold text-dark mb-3">Resources</h6>
+                <ul class="list-unstyled small d-flex flex-column gap-2 mb-0">
+                    <li><a href="#" class="text-secondary text-decoration-none hover-primary">Documentation</a></li>
+                    <li><a href="#" class="text-secondary text-decoration-none hover-primary">API Reference</a></li>
+                    <li><a href="#" class="text-secondary text-decoration-none hover-primary">System Status</a></li>
+                </ul>
+            </div>
+            
+            <div class="col-lg-4">
+                <h6 class="fw-bold text-dark mb-3">System Access</h6>
                 {% if user.is_authenticated %}
                     {% if user.is_staff or user.is_superuser %}
-                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'admin-dashboard-page' %}" style="transition: opacity 0.2s;"><i class="bi bi-cpu me-1"></i>Admin</a>
-                    <span class="text-muted">|</span>
+                        <a href="{% url 'admin-dashboard-page' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-2 fw-semibold">
+                            <i class="bi bi-cpu me-1"></i> Admin Portal
+                        </a>
                     {% endif %}
                 {% else %}
-                    <a class="text-primary fw-semibold text-decoration-none" href="{% url 'admin-login' %}" style="transition: opacity 0.2s;"><i class="bi bi-shield-lock me-1"></i>Admin Login</a>
-                    <span class="text-muted">|</span>
+                    <a href="{% url 'admin-login' %}" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-2 fw-semibold">
+                        <i class="bi bi-shield-lock me-1"></i> Admin Sign In
+                    </a>
                 {% endif %}
-                <span>© 2024 MeetFlow Communications. All rights reserved.</span>
+            </div>
+        </div>
+        
+        <div class="border-top pt-4 d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 text-muted small">
+            <div>© 2026 MeetFlow Platform. All rights reserved.</div>
+            <div class="d-flex gap-4">
+                <a href="#" class="text-secondary text-decoration-none hover-primary">Privacy Policy</a>
+                <a href="#" class="text-secondary text-decoration-none hover-primary">Terms of Service</a>
+                <a href="#" class="text-secondary text-decoration-none hover-primary">Security</a>
             </div>
         </div>
     </div>
 </footer>
-
-<style>
-@keyframes float {
-    0%, 100% { transform: translateY(-50%) translateY(0px); }
-    50% { transform: translateY(-50%) translateY(-10px); }
-}
-</style>
-
 {% endblock %}
 
 {% block extra_js %}
-<script>
-console.log('Dashboard page loaded - updated v2');
-</script>
 {% endblock %}
+

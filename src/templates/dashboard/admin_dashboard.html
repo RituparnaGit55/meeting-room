@@ -1,233 +1,1026 @@
-{% extends 'base.html' %}
+{% extends 'admin/base_admin.html' %}
 
-{% block title %}MeetFlow | Admin Dashboard{% endblock %}
+{% block title %}MeetFlow | Executive Admin Portal{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-4 py-4">
-    <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 fade-in-up">
-        <div>
-            <h1 class="fw-bold mb-1" style="color: var(--text-dark);">
-                <i class="bi bi-cpu me-3 text-gradient"></i>Admin Analytics
-            </h1>
-            <p class="text-muted mb-0">System performance, statistics, and resource metrics control panel.</p>
-        </div>
-        <div class="d-flex gap-2 mt-3 mt-md-0">
-            <button onclick="location.reload()" class="btn-outline-glass px-4 py-2 fw-bold">
-                <i class="bi bi-arrow-clockwise me-2"></i>REFRESH STATS
+<div class="admin-layout-wrapper">
+    <!-- Admin Sidebar Navigation -->
+    <aside class="admin-sidebar" id="adminSidebar">
+        <!-- Sidebar Brand Header -->
+        <div class="p-4 border-bottom border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="admin-shield-badge">
+                    <i class="bi bi-shield-lock-fill text-white fs-5"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-white mb-0 tracking-tight">MeetFlow Admin</h6>
+                    <span class="badge badge-active rounded-pill extra-small">
+                        <i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i> System Online
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-sm text-muted d-lg-none" onclick="toggleSidebar()" aria-label="Close sidebar">
+                <i class="bi bi-x-lg fs-5"></i>
             </button>
-            <a href="/admin/" class="btn-gradient-primary px-4 py-2 text-decoration-none d-flex align-items-center fw-bold">
-                <i class="bi bi-shield-lock-fill me-2"></i>ALL ACCESS OF ADMIN
+        </div>
+
+        <!-- Sidebar Menu Items -->
+        <div class="p-3 flex-grow-1 overflow-y-auto">
+            <div class="text-uppercase text-muted extra-small fw-bold px-3 mb-2 tracking-wider">Main Control</div>
+            <a onclick="switchTab('overview')" class="admin-nav-item active" id="nav-overview">
+                <i class="bi bi-grid-1x2-fill"></i>
+                <span>Dashboard Overview</span>
+            </a>
+            <a onclick="switchTab('meetings')" class="admin-nav-item" id="nav-meetings">
+                <i class="bi bi-camera-video-fill"></i>
+                <span>Meeting Management</span>
+            </a>
+            <a onclick="switchTab('users')" class="admin-nav-item" id="nav-users">
+                <i class="bi bi-people-fill"></i>
+                <span>User Management</span>
+            </a>
+            <a onclick="switchTab('rooms')" class="admin-nav-item" id="nav-rooms">
+                <i class="bi bi-door-open-fill"></i>
+                <span>Room Management</span>
+            </a>
+
+            <div class="text-uppercase text-muted extra-small fw-bold px-3 mt-4 mb-2 tracking-wider">System & Data</div>
+            <a onclick="switchTab('analytics')" class="admin-nav-item" id="nav-analytics">
+                <i class="bi bi-bar-chart-line-fill"></i>
+                <span>Analytics</span>
+            </a>
+            <a onclick="switchTab('reports')" class="admin-nav-item" id="nav-reports">
+                <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                <span>Reports & Exports</span>
+            </a>
+            <a onclick="switchTab('settings')" class="admin-nav-item" id="nav-settings">
+                <i class="bi bi-gear-wide-connected"></i>
+                <span>System Settings</span>
+            </a>
+
+            <div class="text-uppercase text-muted extra-small fw-bold px-3 mt-4 mb-2 tracking-wider">Account</div>
+            <a href="{% url 'profile' %}" class="admin-nav-item">
+                <i class="bi bi-person-badge-fill"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="{% url 'logout' %}" class="admin-nav-item text-danger">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Sign Out</span>
             </a>
         </div>
-    </div>
 
-    <!-- Statistics Overview Grid -->
-    <div class="row g-4 mb-5 fade-in-up" style="animation-delay: 0.1s;">
-        <!-- Total Meetings -->
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card-light p-4 h-100 position-relative overflow-hidden card-hover-glow">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Meetings</p>
-                        <h2 class="fw-bold mb-0 text-dark">{{ total_meetings }}</h2>
-                    </div>
-                    <div class="rounded-3 p-3" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);">
-                        <i class="bi bi-calendar-check fs-3" style="color: #6366f1;"></i>
-                    </div>
+        <!-- Sidebar Footer Info -->
+        <div class="p-3 border-top border-secondary border-opacity-25 bg-black bg-opacity-30 text-center">
+            <div class="extra-small text-muted mb-1">Signed in as</div>
+            <div class="fw-bold text-white small text-truncate px-2">
+                <i class="bi bi-person-circle text-primary me-1"></i> {{ user.email }}
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="admin-content-area">
+        
+        <!-- Top Control Header Bar -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-3 border-bottom border-secondary border-opacity-25">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-outline-secondary d-lg-none py-1 px-2" onclick="toggleSidebar()">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <div>
+                    <h2 class="fw-bold text-white mb-0" id="currentTabHeading">Admin Analytics & Controls</h2>
+                    <p class="text-muted small mb-0" id="currentTabSubheading">Executive portal for system performance, active rooms, and user management.</p>
                 </div>
-                <div class="mt-3">
-                    <span class="text-success small fw-semibold"><i class="bi bi-arrow-up-short"></i>Active</span>
-                    <span class="text-muted small ms-1">across system</span>
-                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button onclick="location.reload()" class="btn btn-outline-light rounded-pill px-3 py-2 btn-sm fw-semibold">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Data
+                </button>
+                <a href="/admin/" class="btn btn-admin-primary rounded-pill px-3 py-2 btn-sm">
+                    <i class="bi bi-shield-lock-fill me-1"></i> Django Native Admin
+                </a>
             </div>
         </div>
 
-        <!-- Total Participants -->
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card-light p-4 h-100 position-relative overflow-hidden card-hover-glow">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Participants</p>
-                        <h2 class="fw-bold mb-0 text-dark">{{ total_participants }}</h2>
-                    </div>
-                    <div class="rounded-3 p-3" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.15) 100%);">
-                        <i class="bi bi-people fs-3" style="color: #10b981;"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-success small fw-semibold"><i class="bi bi-person-check-fill me-1"></i>{{ total_users }} Registered Users</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Recordings -->
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card-light p-4 h-100 position-relative overflow-hidden card-hover-glow">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Recordings</p>
-                        <h2 class="fw-bold mb-0 text-dark">{{ total_recordings }}</h2>
-                    </div>
-                    <div class="rounded-3 p-3" style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%);">
-                        <i class="bi bi-camera-video fs-3" style="color: #f59e0b;"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-warning small fw-semibold"><i class="bi bi-hdd-fill me-1"></i>Saved locally</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Total Transcripts -->
-        <div class="col-xl-3 col-md-6">
-            <div class="glass-card-light p-4 h-100 position-relative overflow-hidden card-hover-glow">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <p class="text-muted small fw-bold text-uppercase mb-1">Total Transcripts</p>
-                        <h2 class="fw-bold mb-0 text-dark">{{ total_transcripts }}</h2>
-                    </div>
-                    <div class="rounded-3 p-3" style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(109, 40, 217, 0.15) 100%);">
-                        <i class="bi bi-file-earmark-text fs-3" style="color: #8b5cf6;"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-primary small fw-semibold"><i class="bi bi-magic me-1"></i>AI Generated</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Storage and API usage Row -->
-    <div class="row g-4 fade-in-up" style="animation-delay: 0.2s;">
-        <!-- Storage Statistics -->
-        <div class="col-lg-6">
-            <div class="glass-card-light p-4 h-100">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-hdd-network me-2 text-gradient"></i>Storage Statistics</h5>
-                    <span class="badge bg-primary-subtle text-primary px-3 py-2 rounded-pill fw-semibold">{{ storage_stats_display }} Used</span>
-                </div>
-                
-                <p class="text-muted mb-4">Storage capacity utilization for all user-recorded media files, screenshares, and local audio recordings.</p>
-
-                <!-- Disk Bar visual -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between text-muted small mb-2">
-                        <span>Local Media Directory Space</span>
-                        <span class="fw-bold text-dark">Active</span>
-                    </div>
-                    <div class="progress" style="height: 12px; border-radius: 50px; background: rgba(0,0,0,0.05);">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 45%; background: var(--primary-gradient); border-radius: 50px;"></div>
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-6">
-                        <div class="p-3 bg-light rounded-4">
-                            <span class="text-muted small d-block">Local Recordings</span>
-                            <span class="fw-bold text-dark">{{ total_recordings }} files</span>
+        <!-- SECTION 1: OVERVIEW TAB -->
+        <div class="admin-tab-section active" id="section-overview">
+            <!-- Metrics Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-xl-3 col-md-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="text-muted extra-small fw-bold text-uppercase tracking-wider">Total Meetings</span>
+                                <h3 class="fw-bold text-white mt-1 mb-0">{{ total_meetings }}</h3>
+                            </div>
+                            <div class="p-3 rounded-3 bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20">
+                                <i class="bi bi-calendar-check fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="small text-success fw-semibold">
+                            <i class="bi bi-arrow-up-right me-1"></i>{{ active_rooms.count }} live active sessions
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="p-3 bg-light rounded-4">
-                            <span class="text-muted small d-block">Active Host Users</span>
-                            <span class="fw-bold text-dark">{{ active_users }} / {{ total_users }}</span>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="text-muted extra-small fw-bold text-uppercase tracking-wider">Registered Users</span>
+                                <h3 class="fw-bold text-white mt-1 mb-0">{{ total_users }}</h3>
+                            </div>
+                            <div class="p-3 rounded-3 bg-success bg-opacity-10 text-success border border-success border-opacity-20">
+                                <i class="bi bi-people fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="small text-muted">
+                            <span class="text-white fw-bold">{{ active_users }}</span> active accounts ({{ admin_users_count }} Admins)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="text-muted extra-small fw-bold text-uppercase tracking-wider">Storage Used</span>
+                                <h3 class="fw-bold text-white mt-1 mb-0">{{ storage_stats_display }}</h3>
+                            </div>
+                            <div class="p-3 rounded-3 bg-warning bg-opacity-10 text-warning border border-warning border-opacity-20">
+                                <i class="bi bi-hdd-network fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="small text-warning">
+                            <i class="bi bi-camera-video me-1"></i>{{ total_recordings }} saved recordings
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="text-muted extra-small fw-bold text-uppercase tracking-wider">AI Transcripts</span>
+                                <h3 class="fw-bold text-white mt-1 mb-0">{{ total_transcripts }}</h3>
+                            </div>
+                            <div class="p-3 rounded-3 bg-info bg-opacity-10 text-info border border-info border-opacity-20">
+                                <i class="bi bi-file-earmark-text fs-4"></i>
+                            </div>
+                        </div>
+                        <div class="small text-info">
+                            <i class="bi bi-magic me-1"></i>{{ ai_summary_usage }} executive summaries
                         </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Quick Action Grid -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-bold text-white mb-0"><i class="bi bi-camera-video me-2 text-primary"></i>Live WebRTC Rooms</h5>
+                            <span class="badge badge-active rounded-pill px-3 py-1">Real-time</span>
+                        </div>
+                        <p class="text-muted small mb-4">Current WebRTC peer sessions and active participant room counts.</p>
+                        
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            {% for room in active_rooms|slice:":4" %}
+                                <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <div class="fw-bold text-white small">{{ room.title }}</div>
+                                        <div class="text-muted extra-small">Host: {{ room.host.email }} • Code: <code class="text-primary">{{ room.room_code }}</code></div>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="badge badge-active rounded-pill px-2.5 py-1 small">
+                                            {{ room.joined_participants }} Joined
+                                        </span>
+                                        <a href="/meetings/join/?code={{ room.room_code }}" target="_blank" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                            <i class="bi bi-door-open"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            {% empty %}
+                                <div class="p-4 text-center text-muted small border border-secondary border-opacity-25 rounded-3">
+                                    No active meeting sessions right now.
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button onclick="switchTab('rooms')" class="btn btn-outline-light w-100 rounded-3 py-2 btn-sm fw-semibold mt-2">
+                            View All Room Controls <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <h5 class="fw-bold text-white mb-0"><i class="bi bi-people me-2 text-success"></i>Recent User Activity</h5>
+                            <button onclick="openCreateUserModal()" class="btn btn-admin-primary btn-sm py-1 px-3">
+                                <i class="bi bi-person-plus-fill me-1"></i> Add User
+                            </button>
+                        </div>
+                        <p class="text-muted small mb-3">Newly registered accounts and access credentials.</p>
+
+                        <div class="d-flex flex-column gap-2 mb-3">
+                            {% for u in users_list|slice:":4" %}
+                                <div class="p-2.5 px-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle bg-primary bg-opacity-20 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                                            {{ u.email|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-white small">{{ u.email }}</div>
+                                            <div class="text-muted extra-small">Joined {{ u.created_at|date:"M d, Y" }}</div>
+                                        </div>
+                                    </div>
+                                    <span class="badge {% if u.role == 'ADMIN' %}badge-admin{% elif u.role == 'MANAGER' %}badge-manager{% else %}badge-member{% endif %} rounded-pill px-2.5 py-1 extra-small">
+                                        {{ u.role }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <button onclick="switchTab('users')" class="btn btn-outline-light w-100 rounded-3 py-2 btn-sm fw-semibold mt-2">
+                            Manage All Users ({{ total_users }}) <i class="bi bi-arrow-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- API Usage Statistics -->
-        <div class="col-lg-6">
-            <div class="glass-card-light p-4 h-100">
-                <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-bar-chart-line me-2 text-gradient"></i>API Usage & Integration Logs</h5>
-                
-                <!-- Table for API stats -->
+        <!-- SECTION 2: MEETING MANAGEMENT TAB -->
+        <div class="admin-tab-section" id="section-meetings">
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-camera-video me-2 text-primary"></i>Platform Meetings</h5>
+                        <p class="text-muted small mb-0">Search, monitor, or manage all scheduled and live video calls.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="text" id="meetingSearchInput" class="admin-form-control py-1 px-3 text-sm" placeholder="Search meeting title, room code, or host..." onkeyup="filterMeetingsTable()">
+                    </div>
+                </div>
+
                 <div class="table-responsive">
-                    <table class="table table-borderless align-middle mb-0">
+                    <table class="table table-dark table-hover table-dark-custom align-middle mb-0" id="meetingsTable">
                         <thead>
-                            <tr class="text-muted small text-uppercase">
-                                <th class="ps-0">API Integration</th>
-                                <th>Call Count</th>
-                                <th class="text-end">Status</th>
+                            <tr>
+                                <th class="ps-3">Meeting Details</th>
+                                <th>Room Code</th>
+                                <th>Host</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Participants</th>
+                                <th class="text-end pe-3">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <!-- AssemblyAI -->
-                            <tr>
-                                <td class="ps-0">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="p-2 rounded-3 bg-light text-primary">
-                                            <i class="bi bi-mic-fill fs-5"></i>
+                            {% for m in meetings_list %}
+                                <tr id="meeting-row-{{ m.id }}">
+                                    <td class="ps-3">
+                                        <div class="fw-bold text-white small meeting-title-text">{{ m.title }}</div>
+                                        <div class="text-muted extra-small">{{ m.start_time|date:"M d, Y H:i" }}</div>
+                                    </td>
+                                    <td>
+                                        <button onclick="copyRoomCode('{{ m.room_code }}')" class="btn btn-sm btn-outline-secondary font-monospace py-0 px-2 text-light" title="Click to Copy">
+                                            {{ m.room_code }} <i class="bi bi-copy ms-1 opacity-50"></i>
+                                        </button>
+                                    </td>
+                                    <td>
+                                        <span class="text-light small meeting-host-text">{{ m.host.email }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-dark border border-secondary text-light extra-small">
+                                            {{ m.get_meeting_type_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if m.status == 'IN_PROGRESS' %}
+                                            <span class="badge badge-in-progress rounded-pill px-2.5 py-1 extra-small">In Progress</span>
+                                        {% elif m.status == 'SCHEDULED' %}
+                                            <span class="badge badge-scheduled rounded-pill px-2.5 py-1 extra-small">Scheduled</span>
+                                        {% elif m.status == 'COMPLETED' %}
+                                            <span class="badge badge-completed rounded-pill px-2.5 py-1 extra-small">Completed</span>
+                                        {% else %}
+                                            <span class="badge badge-cancelled rounded-pill px-2.5 py-1 extra-small">Cancelled</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-scheduled rounded-pill px-2.5 py-1 extra-small">
+                                            {{ m.participant_count }} Total
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            {% if m.status == 'IN_PROGRESS' %}
+                                                <button onclick="endMeetingSession('{{ m.id }}', '{{ m.title|escapejs }}')" class="btn btn-outline-warning btn-sm" title="Force End Session">
+                                                    <i class="bi bi-stop-circle-fill"></i> End
+                                                </button>
+                                            {% endif %}
+                                            <button onclick="deleteMeeting('{{ m.id }}', '{{ m.title|escapejs }}')" class="btn btn-outline-danger btn-sm" title="Delete Meeting">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
                                         </div>
-                                        <div>
-                                            <span class="fw-bold text-dark d-block">AssemblyAI Transcription</span>
-                                            <span class="text-muted small">Language Detection & Diarization</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="fw-semibold text-dark">{{ api_assemblyai_calls }}</td>
-                                <td class="text-end">
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Active</span>
-                                </td>
-                            </tr>
-
-                            <!-- OpenAI -->
-                            <tr>
-                                <td class="ps-0">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="p-2 rounded-3 bg-light text-purple" style="color: #8b5cf6;">
-                                            <i class="bi bi-chat-left-sparkle-fill fs-5"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-bold text-dark d-block">OpenAI Summary API</span>
-                                            <span class="text-muted small">GPT-4o-mini Summarization</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="fw-semibold text-dark">{{ api_openai_calls }}</td>
-                                <td class="text-end">
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Active</span>
-                                </td>
-                            </tr>
-
-                            <!-- YouTube -->
-                            <tr>
-                                <td class="ps-0">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="p-2 rounded-3 bg-light text-danger">
-                                            <i class="bi bi-youtube fs-5"></i>
-                                        </div>
-                                        <div>
-                                            <span class="fw-bold text-dark d-block">YouTube Data API v3</span>
-                                            <span class="text-muted small">Automatic Company Uploads</span>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="fw-semibold text-dark">{{ api_youtube_uploads }}</td>
-                                <td class="text-end">
-                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Active</span>
-                                </td>
-                            </tr>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">No meetings recorded in system database.</td>
+                                </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        <!-- SECTION 3: USER MANAGEMENT TAB -->
+        <div class="admin-tab-section" id="section-users">
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-people me-2 text-success"></i>User Management Directory</h5>
+                        <p class="text-muted small mb-0">Manage roles, activate/deactivate accounts, or add new platform users.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <input type="text" id="userSearchInput" class="admin-form-control py-1 px-3 text-sm" placeholder="Search user email or role..." onkeyup="filterUsersTable()">
+                        <button onclick="openCreateUserModal()" class="btn btn-admin-primary btn-sm py-1.5 px-3 text-nowrap">
+                            <i class="bi bi-person-plus-fill me-1"></i> Add New User
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-dark-custom align-middle mb-0" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">User Email</th>
+                                <th>System Role</th>
+                                <th>Account Status</th>
+                                <th>Email Verified</th>
+                                <th>Hosted Meetings</th>
+                                <th>Joined Date</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users_list %}
+                                <tr id="user-row-{{ u.id }}">
+                                    <td class="ps-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="rounded-circle bg-primary bg-opacity-20 text-primary d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                                                {{ u.email|slice:":1"|upper }}
+                                            </div>
+                                            <span class="fw-bold text-white small user-email-text">{{ u.email }}</span>
+                                            {% if u == request.user %}
+                                                <span class="badge badge-admin rounded-pill extra-small">You</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span id="user-role-badge-{{ u.id }}" class="badge {% if u.role == 'ADMIN' %}badge-admin{% elif u.role == 'MANAGER' %}badge-manager{% else %}badge-member{% endif %} rounded-pill px-2.5 py-1 extra-small">
+                                            {{ u.role }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span id="user-status-badge-{{ u.id }}" class="badge {% if u.is_active %}badge-active{% else %}badge-disabled{% endif %} rounded-pill px-2.5 py-1 extra-small">
+                                            {% if u.is_active %}Active{% else %}Disabled{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if u.is_email_verified %}
+                                            <i class="bi bi-patch-check-fill text-success fs-6" title="Verified"></i>
+                                        {% else %}
+                                            <i class="bi bi-hourglass-split text-warning fs-6" title="Unverified"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-dark border border-secondary text-light extra-small">
+                                            {{ u.hosted_count }} Meetings
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted extra-small">{{ u.created_at|date:"M d, Y" }}</span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <button onclick="openChangeRoleModal('{{ u.id }}', '{{ u.role }}', '{{ u.email|escapejs }}')" class="btn btn-outline-secondary btn-sm text-light" title="Edit Role">
+                                                <i class="bi bi-pencil-square"></i> Role
+                                            </button>
+                                            {% if u != request.user %}
+                                                <button id="toggle-btn-{{ u.id }}" onclick="toggleUserStatus('{{ u.id }}', '{{ u.email|escapejs }}')" class="btn {% if u.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %} btn-sm" title="Toggle Status">
+                                                    {% if u.is_active %}<i class="bi bi-person-x-fill"></i> Disable{% else %}<i class="bi bi-person-check-fill"></i> Enable{% endif %}
+                                                </button>
+                                                <button onclick="deleteUser('{{ u.id }}', '{{ u.email|escapejs }}')" class="btn btn-outline-danger btn-sm" title="Delete User">
+                                                    <i class="bi bi-trash3-fill"></i>
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted py-4">No users found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: ROOM MANAGEMENT TAB -->
+        <div class="admin-tab-section" id="section-rooms">
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-door-open me-2 text-info"></i>WebRTC Meeting Rooms</h5>
+                        <p class="text-muted small mb-0">Active room controls, waiting room status, and live access.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    {% for r in active_rooms %}
+                        <div class="col-md-6 col-xl-4">
+                            <div class="p-4 rounded-4 bg-dark bg-opacity-70 border border-secondary border-opacity-30 h-100">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <span class="badge badge-active rounded-pill px-3 py-1">
+                                        <i class="bi bi-record-circle-fill text-danger me-1"></i> Live
+                                    </span>
+                                    <span class="font-monospace text-muted extra-small">ID: {{ r.room_code }}</span>
+                                </div>
+                                <h6 class="fw-bold text-white mb-1">{{ r.title }}</h6>
+                                <p class="text-muted small mb-3">Host: {{ r.host.email }}</p>
+
+                                <div class="d-flex align-items-center justify-content-between p-2.5 px-3 rounded-3 bg-black bg-opacity-40 mb-3">
+                                    <span class="text-muted extra-small">Joined Members:</span>
+                                    <span class="fw-bold text-info small">{{ r.joined_participants }} connected</span>
+                                </div>
+
+                                <div class="d-flex gap-2">
+                                    <a href="/meetings/join/?code={{ r.room_code }}" target="_blank" class="btn btn-admin-primary btn-sm w-100">
+                                        <i class="bi bi-box-arrow-in-right me-1"></i> Join Room
+                                    </a>
+                                    <button onclick="endMeetingSession('{{ r.id }}', '{{ r.title|escapejs }}')" class="btn btn-outline-danger btn-sm">
+                                        End
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="col-12">
+                            <div class="p-5 text-center text-muted rounded-4 border border-secondary border-opacity-25 bg-dark bg-opacity-40">
+                                <i class="bi bi-door-closed fs-1 d-block mb-2 text-secondary"></i>
+                                <h6>No Live WebRTC Sessions Active</h6>
+                                <p class="small mb-0">Start a meeting from the main user menu or schedule one to see active rooms here.</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 5: ANALYTICS TAB -->
+        <div class="admin-tab-section" id="section-analytics">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <h5 class="fw-bold text-white mb-3"><i class="bi bi-hdd-network me-2 text-warning"></i>Media Storage Utilization</h5>
+                        <p class="text-muted small mb-3">Breakdown of disk usage for MP4 video recordings and audio transcripts.</p>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between text-muted small mb-2">
+                                <span>Storage Consumption</span>
+                                <span class="text-white fw-bold">{{ storage_stats_display }}</span>
+                            </div>
+                            <div class="progress bg-dark" style="height: 12px; border-radius: 50px;">
+                                <div class="progress-bar bg-gradient-purple" role="progressbar" style="width: 35%; border-radius: 50px;"></div>
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 mb-3 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-camera-video text-warning fs-4"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">Meeting Video Recordings</div>
+                                    <div class="text-muted extra-small">Recorded WebRTC sessions</div>
+                                </div>
+                            </div>
+                            <span class="fw-bold text-white">{{ total_recordings }} files</span>
+                        </div>
+
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <i class="bi bi-file-earmark-text text-info fs-4"></i>
+                                <div>
+                                    <div class="fw-bold text-white small">AssemblyAI Transcripts</div>
+                                    <div class="text-muted extra-small">Generated text logs</div>
+                                </div>
+                            </div>
+                            <span class="fw-bold text-white">{{ total_transcripts }} items</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="admin-glass-card p-4 h-100">
+                        <h5 class="fw-bold text-white mb-3"><i class="bi bi-cpu me-2 text-info"></i>API Integration Traffic</h5>
+                        <p class="text-muted small mb-4">Total requests initiated to third-party services.</p>
+
+                        <div class="d-flex flex-column gap-3">
+                            <div>
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>AssemblyAI Speech API</span>
+                                    <span class="text-white fw-bold">{{ api_assemblyai_calls }} calls</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 8px;">
+                                    <div class="progress-bar bg-info" style="width: 75%;"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>OpenAI GPT Summaries</span>
+                                    <span class="text-white fw-bold">{{ api_openai_calls }} calls</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 8px;">
+                                    <div class="progress-bar bg-success" style="width: 50%;"></div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="d-flex justify-content-between small text-muted mb-1">
+                                    <span>YouTube Data API Uploads</span>
+                                    <span class="text-white fw-bold">{{ api_youtube_uploads }} uploads</span>
+                                </div>
+                                <div class="progress bg-dark" style="height: 8px;">
+                                    <div class="progress-bar bg-danger" style="width: 30%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 6: REPORTS & EXPORTS TAB -->
+        <div class="admin-tab-section" id="section-reports">
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-file-earmark-bar-graph me-2 text-warning"></i>Reports & Data Exports</h5>
+                        <p class="text-muted small mb-0">Generate CSV exports for platform audit and record keeping.</p>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="p-4 rounded-4 bg-dark bg-opacity-70 border border-secondary border-opacity-30 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-3 rounded-3 bg-success bg-opacity-20 text-success border border-success border-opacity-30">
+                                        <i class="bi bi-file-earmark-person fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white mb-1">User Directory Export</h6>
+                                        <p class="text-muted extra-small mb-0">Full CSV export containing user IDs, emails, roles, and status.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="{% url 'admin-export-report' %}?type=users" class="btn btn-admin-primary btn-sm w-100">
+                                <i class="bi bi-download me-1"></i> Download Users CSV
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-4 rounded-4 bg-dark bg-opacity-70 border border-secondary border-opacity-30 h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-3 rounded-3 bg-primary bg-opacity-20 text-primary border border-primary border-opacity-30">
+                                        <i class="bi bi-file-earmark-spreadsheet fs-3"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white mb-1">Meetings History Export</h6>
+                                        <p class="text-muted extra-small mb-0">Full CSV export of all meetings, room codes, hosts, and durations.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <a href="{% url 'admin-export-report' %}?type=meetings" class="btn btn-outline-light btn-sm w-100">
+                                <i class="bi bi-download me-1"></i> Download Meetings CSV
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 7: SYSTEM SETTINGS TAB -->
+        <div class="admin-tab-section" id="section-settings">
+            <div class="admin-glass-card p-4 mb-4">
+                <h5 class="fw-bold text-white mb-3"><i class="bi bi-gear-wide-connected me-2 text-info"></i>System Environment Settings</h5>
+                <p class="text-muted small mb-4">Core environment settings, database status, and active API integrations.</p>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold text-white small">Django Environment</div>
+                                <div class="text-muted extra-small">config.settings.development</div>
+                            </div>
+                            <span class="badge badge-active rounded-pill px-3 py-1">Development</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold text-white small">Database Engine</div>
+                                <div class="text-muted extra-small">SQLite / PostgreSQL</div>
+                            </div>
+                            <span class="badge badge-manager rounded-pill px-3 py-1">Connected</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold text-white small">AssemblyAI Integration</div>
+                                <div class="text-muted extra-small">Speech-to-Text API Service</div>
+                            </div>
+                            <span class="badge badge-active rounded-pill px-3 py-1">Ready</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="p-3 rounded-3 bg-dark bg-opacity-60 border border-secondary border-opacity-25 d-flex align-items-center justify-content-between">
+                            <div>
+                                <div class="fw-bold text-white small">OpenAI Integration</div>
+                                <div class="text-muted extra-small">GPT Summary Generator</div>
+                            </div>
+                            <span class="badge badge-active rounded-pill px-3 py-1">Ready</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<style>
-.text-purple {
-    color: #8b5cf6 !important;
-}
-.card-hover-glow {
-    transition: all 0.3s ease;
-}
-.card-hover-glow:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 15px 30px rgba(99, 102, 241, 0.15) !important;
-}
-</style>
+<!-- Modal: Change User Role -->
+<div class="modal fade" id="changeRoleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
+            <div class="modal-header border-secondary border-opacity-25 p-4">
+                <h6 class="modal-title fw-bold text-white mb-0"><i class="bi bi-person-gear me-2 text-primary"></i>Update User Role</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="modalUserId">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">User Email</label>
+                    <input type="text" id="modalUserEmail" class="admin-form-control" readonly>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Select Role</label>
+                    <select id="modalUserRoleSelect" class="admin-form-control">
+                        <option value="MEMBER">Member (Standard Access)</option>
+                        <option value="MANAGER">Manager (Elevated Host)</option>
+                        <option value="ADMIN">Admin (Full Control)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-admin-primary btn-sm" onclick="submitChangeRole()">Save Role</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Create New User -->
+<div class="modal fade" id="createUserModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
+            <div class="modal-header border-secondary border-opacity-25 p-4">
+                <h6 class="modal-title fw-bold text-white mb-0"><i class="bi bi-person-plus-fill me-2 text-success"></i>Add New User</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Email Address</label>
+                    <input type="email" id="createEmailInput" class="admin-form-control" placeholder="user@example.com" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Password</label>
+                    <input type="password" id="createPasswordInput" class="admin-form-control" placeholder="Minimum 8 characters" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Role</label>
+                    <select id="createRoleSelect" class="admin-form-control">
+                        <option value="MEMBER">Member</option>
+                        <option value="MANAGER">Manager</option>
+                        <option value="ADMIN">Admin</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-admin-primary btn-sm" onclick="submitCreateUser()">Create User</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const headings = {
+        'overview': { title: 'Admin Analytics & Controls', sub: 'Executive portal for system performance, active rooms, and user management.' },
+        'meetings': { title: 'Meeting & Room Controls', sub: 'Monitor active WebRTC peer connections, room bandwidth, and scheduled calls.' },
+        'users': { title: 'User Account Directory', sub: 'Manage permissions, active statuses, and administrative roles.' },
+        'rooms': { title: 'Active Meeting Rooms', sub: 'Real-time monitoring of WebRTC room instances and waiting room configurations.' },
+        'analytics': { title: 'System Analytics & Media', sub: 'Disk storage utilization and API request performance metrics.' },
+        'reports': { title: 'Reports & Data Exports', sub: 'Audit system data and download full CSV reports.' },
+        'settings': { title: 'System Environment Settings', sub: 'Integrations status, security headers, and database parameters.' }
+    };
+
+    function switchTab(tabId) {
+        if (!headings[tabId]) tabId = 'overview';
+
+        document.querySelectorAll('.admin-tab-section').forEach(sec => sec.classList.remove('active'));
+        document.querySelectorAll('.admin-nav-item').forEach(item => item.classList.remove('active'));
+
+        const targetSection = document.getElementById('section-' + tabId);
+        const targetNav = document.getElementById('nav-' + tabId);
+        if (targetSection) targetSection.classList.add('active');
+        if (targetNav) targetNav.classList.add('active');
+
+        document.getElementById('currentTabHeading').textContent = headings[tabId].title;
+        document.getElementById('currentTabSubheading').textContent = headings[tabId].sub;
+
+        window.location.hash = tabId;
+
+        // Close sidebar on mobile
+        const sidebar = document.getElementById('adminSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar && sidebar.classList.contains('show')) {
+            sidebar.classList.remove('show');
+            if (backdrop) backdrop.classList.remove('show');
+        }
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.getElementById('adminSidebar');
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (sidebar) sidebar.classList.toggle('show');
+        if (backdrop) backdrop.classList.toggle('show');
+    }
+
+    // Initialize on page load based on URL hash
+    window.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash.replace('#', '');
+        if (hash && headings[hash]) {
+            switchTab(hash);
+        }
+    });
+
+    // Copy Room Code Helper
+    function copyRoomCode(code) {
+        navigator.clipboard.writeText(code).then(() => {
+            showToast('Copied!', `Room code ${code} copied to clipboard.`, 'success');
+        });
+    }
+
+    // Filter Meetings Table
+    function filterMeetingsTable() {
+        const input = document.getElementById('meetingSearchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#meetingsTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    }
+
+    // Filter Users Table
+    function filterUsersTable() {
+        const input = document.getElementById('userSearchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#usersTable tbody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(input) ? '' : 'none';
+        });
+    }
+
+    // AJAX Action: Toggle User Active Status
+    function toggleUserStatus(userId, email) {
+        const btn = document.getElementById('toggle-btn-' + userId);
+        const formData = new FormData();
+        formData.append('action', 'toggle_status');
+        formData.append('user_id', userId);
+
+        fetch("{% url 'admin-user-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Status Updated', data.message, 'success');
+                const badge = document.getElementById('user-status-badge-' + userId);
+                if (data.is_active) {
+                    badge.className = 'badge badge-active rounded-pill px-2.5 py-1 extra-small';
+                    badge.textContent = 'Active';
+                    btn.className = 'btn btn-outline-warning btn-sm';
+                    btn.innerHTML = '<i class="bi bi-person-x-fill"></i> Disable';
+                } else {
+                    badge.className = 'badge badge-disabled rounded-pill px-2.5 py-1 extra-small';
+                    badge.textContent = 'Disabled';
+                    btn.className = 'btn btn-outline-success btn-sm';
+                    btn.innerHTML = '<i class="bi bi-person-check-fill"></i> Enable';
+                }
+            } else {
+                showToast('Error', data.error || 'Failed to update user status', 'danger');
+            }
+        });
+    }
+
+    // Open Change Role Modal
+    function openChangeRoleModal(userId, currentRole, email) {
+        document.getElementById('modalUserId').value = userId;
+        document.getElementById('modalUserEmail').value = email;
+        document.getElementById('modalUserRoleSelect').value = currentRole;
+        const modal = new bootstrap.Modal(document.getElementById('changeRoleModal'));
+        modal.show();
+    }
+
+    // Submit Change Role
+    function submitChangeRole() {
+        const userId = document.getElementById('modalUserId').value;
+        const role = document.getElementById('modalUserRoleSelect').value;
+        const formData = new FormData();
+        formData.append('action', 'change_role');
+        formData.append('user_id', userId);
+        formData.append('role', role);
+
+        fetch("{% url 'admin-user-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const modalEl = document.getElementById('changeRoleModal');
+            const bsModal = bootstrap.Modal.getInstance(modalEl);
+            if (bsModal) bsModal.hide();
+
+            if (data.success) {
+                showToast('Role Updated', data.message, 'success');
+                const badge = document.getElementById('user-role-badge-' + userId);
+                if (badge) {
+                    badge.textContent = data.role;
+                    badge.className = `badge ${data.role === 'ADMIN' ? 'badge-admin' : data.role === 'MANAGER' ? 'badge-manager' : 'badge-member'} rounded-pill px-2.5 py-1 extra-small`;
+                }
+            } else {
+                showToast('Error', data.error || 'Failed to update role', 'danger');
+            }
+        });
+    }
+
+    // Open Create User Modal
+    function openCreateUserModal() {
+        document.getElementById('createEmailInput').value = '';
+        document.getElementById('createPasswordInput').value = '';
+        const modal = new bootstrap.Modal(document.getElementById('createUserModal'));
+        modal.show();
+    }
+
+    // Submit Create User
+    function submitCreateUser() {
+        const email = document.getElementById('createEmailInput').value;
+        const password = document.getElementById('createPasswordInput').value;
+        const role = document.getElementById('createRoleSelect').value;
+
+        if (!email || !password) {
+            showToast('Validation Error', 'Email and password are required', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'create_user');
+        formData.append('email', email);
+        formData.append('password', password);
+        formData.append('role', role);
+
+        fetch("{% url 'admin-user-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const modalEl = document.getElementById('createUserModal');
+            const bsModal = bootstrap.Modal.getInstance(modalEl);
+            if (bsModal) bsModal.hide();
+
+            if (data.success) {
+                showToast('User Created', data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                showToast('Error', data.error || 'Failed to create user', 'danger');
+            }
+        });
+    }
+
+    // Delete User
+    function deleteUser(userId, email) {
+        promptConfirmDelete({
+            title: 'Delete User Account',
+            message: `Are you sure you want to permanently delete user "${email}"? This action cannot be undone.`,
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('action', 'delete_user');
+                formData.append('user_id', userId);
+
+                fetch("{% url 'admin-user-action' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('User Deleted', data.message, 'success');
+                        const row = document.getElementById('user-row-' + userId);
+                        if (row) row.remove();
+                    } else {
+                        showToast('Error', data.error || 'Failed to delete user', 'danger');
+                    }
+                });
+            }
+        });
+    }
+
+    // Force End Meeting Session
+    function endMeetingSession(meetingId, title) {
+        promptConfirmDelete({
+            title: 'End Meeting Session',
+            message: `Are you sure you want to force end the active meeting session "${title}"?`,
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('action', 'end_meeting');
+                formData.append('meeting_id', meetingId);
+
+                fetch("{% url 'admin-meeting-action' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Meeting Ended', data.message, 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        showToast('Error', data.error || 'Failed to end meeting', 'danger');
+                    }
+                });
+            }
+        });
+    }
+
+    // Delete Meeting
+    function deleteMeeting(meetingId, title) {
+        promptConfirmDelete({
+            title: 'Delete Meeting',
+            message: `Are you sure you want to delete meeting "${title}"?`,
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('action', 'delete_meeting');
+                formData.append('meeting_id', meetingId);
+
+                fetch("{% url 'admin-meeting-action' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Meeting Deleted', data.message, 'success');
+                        const row = document.getElementById('meeting-row-' + meetingId);
+                        if (row) row.remove();
+                    } else {
+                        showToast('Error', data.error || 'Failed to delete meeting', 'danger');
+                    }
+                });
+            }
+        });
+    }
+</script>
 {% endblock %}

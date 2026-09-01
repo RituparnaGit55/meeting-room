@@ -16,7 +16,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['email', 'first_name', 'last_name', 'department', 'phone']
+        fields = ['email', 'first_name', 'last_name', 'phone']
         widgets = {
             'email': forms.EmailInput(attrs={
                 'class': 'form-control',
@@ -29,10 +29,6 @@ class UserRegistrationForm(forms.ModelForm):
             'last_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Enter last name'
-            }),
-            'department': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Enter department'
             }),
             'phone': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -53,6 +49,8 @@ class UserRegistrationForm(forms.ModelForm):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         password = cleaned_data.get('password')
         password_confirm = cleaned_data.get('password_confirm')
         if password and password_confirm and password != password_confirm:
@@ -68,10 +66,10 @@ class UserRegistrationForm(forms.ModelForm):
 
 
 class UserLoginForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={
+    email = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
-        'placeholder': 'Enter email'
-    }))
+        'placeholder': 'Enter User ID or email'
+    }), label="User ID / Email")
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control',
         'placeholder': 'Enter password'
@@ -79,26 +77,28 @@ class UserLoginForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         email = cleaned_data.get('email')
         password = cleaned_data.get('password')
         if email and password:
-            user = authenticate(email=email, password=password)
+            user = authenticate(email=email, password=password) or authenticate(username=email, password=password)
             if not user:
-                raise forms.ValidationError("Invalid email or password")
+                raise forms.ValidationError("Invalid User ID or password")
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive")
             # Restrict general users to non-admin accounts
-            if getattr(user, 'role', None) == 'ADMIN' or user.is_superuser or user.is_staff:
+            if getattr(user, 'role', None) == 'ADMIN' or getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
                 raise forms.ValidationError("This portal is for general users. Please use the Admin Login page.")
             cleaned_data['user'] = user
         return cleaned_data
 
 
 class AdminLoginForm(forms.Form):
-    email = forms.EmailField(widget=forms.EmailInput(attrs={
+    email = forms.CharField(widget=forms.TextInput(attrs={
         'class': 'form-control',
-        'placeholder': 'Enter email'
-    }))
+        'placeholder': 'Enter User ID or email'
+    }), label="User ID / Email")
     password = forms.CharField(widget=forms.PasswordInput(attrs={
         'class': 'form-control',
         'placeholder': 'Enter password'
@@ -106,16 +106,18 @@ class AdminLoginForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         email = cleaned_data.get('email')
         password = cleaned_data.get('password')
         if email and password:
-            user = authenticate(email=email, password=password)
+            user = authenticate(email=email, password=password) or authenticate(username=email, password=password)
             if not user:
-                raise forms.ValidationError("Invalid email or password")
+                raise forms.ValidationError("Invalid User ID or password")
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive")
             # Restrict admin login portal to admins/staff
-            if not (getattr(user, 'role', None) == 'ADMIN' or user.is_superuser or user.is_staff):
+            if not (getattr(user, 'role', None) == 'ADMIN' or getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
                 raise forms.ValidationError("Access denied. Only administrators and staff members are allowed to log in here.")
             cleaned_data['user'] = user
         return cleaned_data
@@ -126,12 +128,12 @@ class UserProfileForm(forms.ModelForm):
         model = User
         fields = ['first_name', 'last_name', 'department', 'phone', 'bio', 'avatar']
         widgets = {
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'department': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone': forms.TextInput(attrs={'class': 'form-control'}),
-            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'first_name': forms.TextInput(attrs={'class': 'form-control form-control-modern', 'placeholder': 'Enter first name'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control form-control-modern', 'placeholder': 'Enter last name'}),
+            'department': forms.TextInput(attrs={'class': 'form-control form-control-modern', 'placeholder': 'e.g. Engineering, Product'}),
+            'phone': forms.TextInput(attrs={'class': 'form-control form-control-modern', 'placeholder': '+1 (555) 000-0000'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control form-control-modern', 'rows': 3, 'placeholder': 'Write a short bio about yourself...'}),
+            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control form-control-modern d-none', 'id': 'avatarFileInput', 'accept': 'image/*'}),
         }
 
 
@@ -160,6 +162,8 @@ class PasswordResetRequestForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         new_password = cleaned_data.get('new_password')
         new_password_confirm = cleaned_data.get('new_password_confirm')
         if new_password and new_password_confirm and new_password != new_password_confirm:
@@ -182,6 +186,8 @@ class PasswordResetForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         new_password = cleaned_data.get('new_password')
         new_password_confirm = cleaned_data.get('new_password_confirm')
         if new_password and new_password_confirm and new_password != new_password_confirm:
@@ -218,6 +224,8 @@ class ChangePasswordForm(forms.Form):
 
     def clean(self):
         cleaned_data = super().clean()
+        if cleaned_data is None:
+            cleaned_data = {}
         new_password = cleaned_data.get('new_password')
         new_password_confirm = cleaned_data.get('new_password_confirm')
         if new_password and new_password_confirm and new_password != new_password_confirm:

@@ -68,7 +68,7 @@ celery -A config worker --loglevel=info
 
 ### 6. Process Managers (Gunicorn & Daphne)
 In production, run Daphne to support ASGI websockets and Channels traffic:
-```bash
+```bash+
 daphne -b 0.0.0.0 -p 8000 config.asgi:application
 ```
 Use a service supervisor (like systemd) to run Daphne and Celery as persistent background daemons.

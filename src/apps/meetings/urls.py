@@ -10,6 +10,7 @@ router.register(r'(?P<meeting_pk>\d+)/participants', views.MeetingParticipantVie
 urlpatterns = [
     path('api/join/', views.JoinMeetingAPIView.as_view(), name='join-meeting-api'),
     path('api/recordings/upload/', views.UploadRecordingView.as_view(), name='upload-recording-api'),
+    path('api/recordings/<int:pk>/delete/', views.DeleteRecordingView.as_view(), name='delete-recording-api'),
     path('api/', include(router.urls)),
 
     # Web URLs

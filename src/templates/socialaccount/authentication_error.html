@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}MeetFlow | Authentication Error{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center py-5 min-vh-75">
+    <div class="col-12 col-md-8 col-lg-6 col-xl-5">
+        <div class="glass-panel p-4 p-md-5 rounded-5 shadow-2xl fade-in-up text-center border-0" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+            <div class="d-inline-flex align-items-center justify-content-center mb-3 rounded-circle bg-danger-subtle p-3 text-danger shadow-md">
+                <i class="bi bi-exclamation-triangle-fill fs-1"></i>
+            </div>
+            
+            <h3 class="fw-bold text-dark mb-2">Third-Party Login Failure</h3>
+            <p class="text-secondary small mb-4">
+                An error occurred while attempting to sign in via your Google account.
+            </p>
+
+            <div class="alert alert-warning text-start border-0 rounded-4 p-3 mb-4 shadow-sm" style="background-color: #fff8e6;">
+                <div class="d-flex align-items-top">
+                    <i class="bi bi-info-circle-fill me-2 text-warning fs-5"></i>
+                    <div>
+                        <strong class="d-block text-dark small mb-1">Common Causes:</strong>
+                        <ul class="mb-0 text-muted small ps-3">
+                            <li>Google OAuth Client credentials in <code>.env</code> need to be configured in your Google Cloud Console.</li>
+                            <li>The Redirect URI <code>http://127.0.0.1:8000/accounts/google/login/callback/</code> is missing in Google Cloud Console Authorized URIs.</li>
+                            <li>Session cookie state expired or was cleared.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2">
+                <a href="{% url 'login' %}" class="btn btn-hero-primary py-3 rounded-4 font-display fw-bold shadow-lg text-white">
+                    <i class="bi bi-arrow-left me-2"></i> Return to Sign In
+                </a>
+                <a href="{% url 'google_login' %}" class="btn btn-outline-secondary py-2 rounded-4 font-display fw-semibold border-slate-300">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Try Google Sign In Again
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
