@@ -3,7 +3,7 @@ import sys
 import shutil
 from pathlib import Path
 
-# Add src folder to Python path
+# Add src directory to Python path
 BASE_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = BASE_DIR / "src"
 
@@ -31,3 +31,5 @@ except Exception as err:
 from django.core.wsgi import get_wsgi_application
 
 app = get_wsgi_application()
+handler = app
+application = app
