@@ -110,17 +110,21 @@ IS_VERCEL = os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV") is not None
 if IS_VERCEL and not os.getenv("DATABASE_URL"):
     temp_dir = Path("/tmp") if os.name != "nt" else Path(os.environ.get("TEMP", os.environ.get("TMP", BASE_DIR / "scratch")))
     temp_dir.mkdir(parents=True, exist_ok=True)
-    default_db = f"sqlite:///{temp_dir / 'db.sqlite3'}"
+    db_file_path = str(temp_dir / "db.sqlite3")
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": db_file_path,
+        }
+    }
 else:
-    default_db = f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}"
-
-DATABASES = {
-    "default": dj_database_url.config(
-        default=default_db,
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=f"sqlite:///{os.path.join(BASE_DIR, 'db.sqlite3')}",
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
