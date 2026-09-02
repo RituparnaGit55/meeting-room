@@ -47,11 +47,13 @@ def generate_tasks_from_summary(meeting_id):
 
         # Get meeting participants to match assignees
         from apps.accounts.models import User
-        participants = meeting.participants.filter(user__isnull=False).select_related("user")
+        from apps.meetings.models import MeetingParticipant
+        participants = MeetingParticipant.objects.filter(meeting=meeting, user__isnull=False).select_related("user")
         participant_names = []
         for p in participants:
-            name = p.user.get_full_name() or p.user.email
-            participant_names.append({"name": name, "user_id": p.user.id})
+            if p.user:
+                name = p.user.get_full_name() or p.user.email
+                participant_names.append({"name": name, "user_id": p.user.id})
 
         if not settings.OPENAI_API_KEY:
             # Fallback: create tasks without assignees
