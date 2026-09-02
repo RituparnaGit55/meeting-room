@@ -177,7 +177,7 @@ SIMPLE_JWT = {
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "ALGORITHM": "HS256",
-    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY", SECRET_KEY),
+    "SIGNING_KEY": os.getenv("JWT_SECRET_KEY") or SECRET_KEY,
     "AUTH_HEADER_TYPES": ("Bearer",),
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",
@@ -197,10 +197,11 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 
 # Google OAuth Configuration
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI") or "http://localhost:8000/auth/google/callback/"
-SITE_DOMAIN = os.getenv("SITE_DOMAIN") or "http://localhost:8000"
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID") or ""
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET") or ""
+default_site_domain = f"https://{os.getenv('VERCEL_URL')}" if os.getenv("VERCEL_URL") else "http://localhost:8000"
+SITE_DOMAIN = os.getenv("SITE_DOMAIN") or default_site_domain
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI") or f"{SITE_DOMAIN}/accounts/google/login/callback/"
 
 # AssemblyAI Configuration
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
