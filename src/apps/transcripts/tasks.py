@@ -65,13 +65,24 @@ def process_transcription(recording_id, recording_model="Recording"):
             
         # Create transcripts from utterances
         created_count = 0
-        for utterance in transcript.utterances:
+        utterances = transcript.utterances or []
+        if utterances:
+            for utterance in utterances:
+                Transcript.objects.create(
+                    meeting=meeting,
+                    speaker_label=f"Speaker {utterance.speaker}", # e.g. "Speaker A"
+                    text=utterance.text,
+                    start_time=utterance.start / 1000.0, # convert ms to seconds
+                    end_time=utterance.end / 1000.0
+                )
+                created_count += 1
+        elif transcript.text:
             Transcript.objects.create(
                 meeting=meeting,
-                speaker_label=f"Speaker {utterance.speaker}", # e.g. "Speaker A"
-                text=utterance.text,
-                start_time=utterance.start / 1000.0, # convert ms to seconds
-                end_time=utterance.end / 1000.0
+                speaker_label="Speaker",
+                text=transcript.text,
+                start_time=0.0,
+                end_time=0.0
             )
             created_count += 1
             
