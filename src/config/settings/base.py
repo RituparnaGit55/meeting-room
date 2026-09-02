@@ -24,6 +24,11 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ] + env_hosts
 
+# Security & Proxy Settings for Vercel / Reverse Proxy
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
+USE_X_FORWARDED_PORT = True
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
@@ -31,6 +36,11 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8001",
     "https://*.vercel.app",
 ]
+raw_csrf_origins = os.getenv("CSRF_TRUSTED_ORIGINS", "")
+if raw_csrf_origins:
+    CSRF_TRUSTED_ORIGINS += [o.strip() for o in raw_csrf_origins.split(",") if o.strip()]
+if os.getenv("VERCEL_URL"):
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.getenv('VERCEL_URL')}")
 
 CSRF_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SAMESITE = "Lax"

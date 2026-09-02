@@ -37,14 +37,10 @@ class UserRegistrationForm(forms.ModelForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = (self.cleaned_data.get('email') or '').strip().lower()
         if email:
-            try:
-                user = User.objects.get(email=email)
-                if user.is_email_verified:
-                    raise forms.ValidationError("User with this Email already exists.")
-            except User.DoesNotExist:
-                pass
+            if User.objects.filter(email__iexact=email).exists():
+                raise forms.ValidationError("User with this Email already exists.")
         return email
 
     def clean(self):
@@ -59,6 +55,7 @@ class UserRegistrationForm(forms.ModelForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.email = (user.email or '').strip().lower()
         user.set_password(self.cleaned_data['password'])
         if commit:
             user.save()
@@ -79,17 +76,21 @@ class UserLoginForm(forms.Form):
         cleaned_data = super().clean()
         if cleaned_data is None:
             cleaned_data = {}
-        email = cleaned_data.get('email')
+        email = (cleaned_data.get('email') or '').strip().lower()
         password = cleaned_data.get('password')
         if email and password:
-            user = authenticate(email=email, password=password) or authenticate(username=email, password=password)
+            user = authenticate(username=email, password=password)
+            if not user:
+                try:
+                    candidate = User.objects.get(email__iexact=email)
+                    if candidate.check_password(password):
+                        user = candidate
+                except User.DoesNotExist:
+                    user = None
             if not user:
                 raise forms.ValidationError("Invalid User ID or password")
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive")
-            # Restrict general users to non-admin accounts
-            if getattr(user, 'role', None) == 'ADMIN' or getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False):
-                raise forms.ValidationError("This portal is for general users. Please use the Admin Login page.")
             cleaned_data['user'] = user
         return cleaned_data
 
@@ -108,15 +109,21 @@ class AdminLoginForm(forms.Form):
         cleaned_data = super().clean()
         if cleaned_data is None:
             cleaned_data = {}
-        email = cleaned_data.get('email')
+        email = (cleaned_data.get('email') or '').strip().lower()
         password = cleaned_data.get('password')
         if email and password:
-            user = authenticate(email=email, password=password) or authenticate(username=email, password=password)
+            user = authenticate(username=email, password=password)
+            if not user:
+                try:
+                    candidate = User.objects.get(email__iexact=email)
+                    if candidate.check_password(password):
+                        user = candidate
+                except User.DoesNotExist:
+                    user = None
             if not user:
                 raise forms.ValidationError("Invalid User ID or password")
             if not user.is_active:
                 raise forms.ValidationError("This account is inactive")
-            # Restrict admin login portal to admins/staff
             if not (getattr(user, 'role', None) == 'ADMIN' or getattr(user, 'is_superuser', False) or getattr(user, 'is_staff', False)):
                 raise forms.ValidationError("Access denied. Only administrators and staff members are allowed to log in here.")
             cleaned_data['user'] = user
