@@ -9,7 +9,7 @@ IS_VERCEL = os.getenv("VERCEL") == "1" or os.getenv("VERCEL_ENV") is not None
 
 load_dotenv(os.path.join(BASE_DIR.parent, ".env"))
 
-SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-placeholder-key-change-me")
+SECRET_KEY = os.getenv("SECRET_KEY") or "django-insecure-placeholder-key-change-me"
 
 DEBUG = True
 
@@ -189,7 +189,8 @@ if DEBUG:
 else:
     EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+email_port_raw = (os.getenv("EMAIL_PORT") or "").strip()
+EMAIL_PORT = int(email_port_raw) if email_port_raw.isdigit() else 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
@@ -198,8 +199,8 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "webmaster@localhost")
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/google/callback/")
-SITE_DOMAIN = os.getenv("SITE_DOMAIN", "http://localhost:8000")
+GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI") or "http://localhost:8000/auth/google/callback/"
+SITE_DOMAIN = os.getenv("SITE_DOMAIN") or "http://localhost:8000"
 
 # AssemblyAI Configuration
 ASSEMBLYAI_API_KEY = os.getenv("ASSEMBLYAI_API_KEY")
