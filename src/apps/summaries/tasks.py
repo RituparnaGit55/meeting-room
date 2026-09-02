@@ -1,5 +1,12 @@
 import json
-from celery import shared_task
+try:
+    from celery import shared_task
+except ImportError:
+    def shared_task(func):
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        wrapper.delay = func
+        return wrapper
 from django.conf import settings
 from openai import OpenAI
 from apps.meetings.models import Meeting
