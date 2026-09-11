@@ -74,7 +74,7 @@ INSTALLED_APPS = [
     "apps.tasks",
     "apps.notifications",
     "apps.analytics",
-    # "apps.webhooks",
+    "apps.webhooks",
     # "apps.api_keys",
     "apps.dashboard",
 ]

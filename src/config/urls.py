@@ -53,7 +53,7 @@ urlpatterns = [
     path("api/v1/tasks/", include("apps.tasks.urls")),
     path("api/v1/notifications/", include("apps.notifications.urls")),
     path("api/v1/analytics/", include("apps.analytics.urls")),
-    # path("api/v1/webhooks/", include("apps.webhooks.urls")),
+    path("api/v1/webhooks/", include("apps.webhooks.urls")),
     # path("api/v1/api_keys/", include("apps.api_keys.urls")),
     path("api/v1/dashboard/", include("apps.dashboard.urls")),
     path("notifications/", NotificationPageView.as_view(), name="notifications-page"),

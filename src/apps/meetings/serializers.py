@@ -22,7 +22,7 @@ class MeetingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meeting
         fields = '__all__'
-        read_only_fields = ['room_code', 'meeting_id', 'created_at', 'updated_at', 'status']
+        read_only_fields = ['room_code', 'meeting_id', 'created_at', 'updated_at']
 
     def get_join_url(self, obj):
         request = self.context.get('request')

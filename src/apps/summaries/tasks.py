@@ -102,6 +102,14 @@ def generate_meeting_summary(meeting_id):
             )
         except Exception as notify_err:
             print(f"Failed to send summary notification: {notify_err}")
+
+        # Webhook: Summary Ready / Completed
+        try:
+            from apps.webhooks.services import WebhookService
+            summary_obj = Summary.objects.filter(meeting=meeting).first()
+            WebhookService.notify_summary_completed(meeting, summary_obj)
+        except Exception as webhook_err:
+            print(f"Failed to send summary webhook: {webhook_err}")
         
         # Chain: Generate tasks from summary
         try:

@@ -7,8 +7,15 @@ class Webhook(models.Model):
         ("MEETING_CREATED", "Meeting Created"),
         ("MEETING_STARTED", "Meeting Started"),
         ("MEETING_ENDED", "Meeting Ended"),
+        ("PARTICIPANT_JOINED", "Participant Joined"),
+        ("PARTICIPANT_LEFT", "Participant Left"),
         ("RECORDING_READY", "Recording Ready"),
+        ("RECORDING_COMPLETED", "Recording Completed"),
+        ("TRANSCRIPT_READY", "Transcript Ready"),
+        ("TRANSCRIPT_COMPLETED", "Transcript Completed"),
         ("SUMMARY_READY", "Summary Ready"),
+        ("SUMMARY_COMPLETED", "Summary Completed"),
+        ("YOUTUBE_UPLOAD_COMPLETED", "YouTube Upload Completed"),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="webhooks")

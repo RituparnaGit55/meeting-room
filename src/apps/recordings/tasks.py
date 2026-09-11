@@ -125,6 +125,13 @@ def upload_recording_to_youtube(recording_id, recording_model="Recording"):
             except Exception as notify_err:
                 print(f"Failed to send YouTube upload notification: {notify_err}")
 
+            # Webhook: YouTube Upload Completed
+            try:
+                from apps.webhooks.services import WebhookService
+                WebhookService.notify_youtube_upload_completed(recording, video_url=video_url, video_id=video_id)
+            except Exception as webhook_err:
+                print(f"Failed to send YouTube upload webhook: {webhook_err}")
+
             print(f"Recording {recording_id} uploaded to YouTube: {video_url}")
         else:
             print(f"YouTube upload failed for recording {recording_id}.")

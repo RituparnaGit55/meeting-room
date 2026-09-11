@@ -6,8 +6,11 @@ from apps.meetings.models import MeetingRecording
 @receiver(post_save, sender=Recording)
 def trigger_transcription_for_recording(sender, instance, created, **kwargs):
     if created:
-        from apps.transcripts.tasks import process_transcription
-        process_transcription.delay(instance.id, recording_model="Recording")
+        try:
+            from apps.transcripts.tasks import process_transcription
+            process_transcription.delay(instance.id, recording_model="Recording")
+        except Exception as e:
+            print(f"Failed to enqueue transcription task: {e}")
 
         # Notify host: Recording Ready
         try:
@@ -20,12 +23,22 @@ def trigger_transcription_for_recording(sender, instance, created, **kwargs):
             )
         except Exception as e:
             print(f"Failed to send recording notification: {e}")
+
+        # Webhook: Recording Completed / Ready
+        try:
+            from apps.webhooks.services import WebhookService
+            WebhookService.notify_recording_completed(instance)
+        except Exception as e:
+            print(f"Failed to send recording webhook: {e}")
 
 @receiver(post_save, sender=MeetingRecording)
 def trigger_transcription_for_meeting_recording(sender, instance, created, **kwargs):
     if created:
-        from apps.transcripts.tasks import process_transcription
-        process_transcription.delay(instance.id, recording_model="MeetingRecording")
+        try:
+            from apps.transcripts.tasks import process_transcription
+            process_transcription.delay(instance.id, recording_model="MeetingRecording")
+        except Exception as e:
+            print(f"Failed to enqueue transcription task: {e}")
 
         # Notify host: Recording Ready
         try:
@@ -38,3 +51,10 @@ def trigger_transcription_for_meeting_recording(sender, instance, created, **kwa
             )
         except Exception as e:
             print(f"Failed to send recording notification: {e}")
+
+        # Webhook: Recording Completed / Ready
+        try:
+            from apps.webhooks.services import WebhookService
+            WebhookService.notify_recording_completed(instance)
+        except Exception as e:
+            print(f"Failed to send recording webhook: {e}")

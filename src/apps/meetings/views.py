@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
@@ -37,7 +38,7 @@ class MeetingViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)
+        return (Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)).distinct()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -94,6 +95,20 @@ class MeetingViewSet(viewsets.ModelViewSet):
         participant = get_object_or_404(MeetingParticipant, meeting=meeting, user=request.user)
         MeetingService.leave_meeting(participant)
         return Response({"message": "Successfully left meeting"}, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsMeetingHost])
+    def end(self, request, pk=None):
+        from django.utils import timezone
+        from apps.webhooks.services import WebhookService
+        meeting = self.get_object()
+        meeting.status = 'COMPLETED'
+        meeting.end_time = timezone.now()
+        meeting.save()
+        try:
+            WebhookService.notify_meeting_ended(meeting)
+        except Exception:
+            pass
+        return Response({"message": "Meeting ended successfully", "status": meeting.status}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], permission_classes=[IsMeetingHost])
     def toggle_recording(self, request, pk=None):
@@ -188,7 +203,7 @@ class DeleteRecordingView(APIView):
 
 
 class JoinMeetingAPIView(generics.GenericAPIView):
-    authentication_classes = [SessionAuthentication]
+    authentication_classes = [JWTAuthentication, SessionAuthentication]
     permission_classes = [AllowAny]
     serializer_class = JoinMeetingSerializer
 
@@ -314,6 +329,6 @@ class MyMeetingsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        meetings = Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)
+        meetings = (Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)).distinct()
         context['recordings'] = MeetingRecording.objects.filter(meeting__in=meetings).distinct().order_by('-created_at')
         return context

@@ -99,6 +99,13 @@ def process_transcription(recording_id, recording_model="Recording"):
             )
         except Exception as notify_err:
             print(f"Failed to send transcript notification: {notify_err}")
+
+        # Webhook: Transcript Ready / Completed
+        try:
+            from apps.webhooks.services import WebhookService
+            WebhookService.notify_transcript_completed(meeting, created_count)
+        except Exception as webhook_err:
+            print(f"Failed to send transcript webhook: {webhook_err}")
         
         # Trigger meeting summary generation automatically
         from apps.summaries.tasks import generate_meeting_summary

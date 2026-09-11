@@ -74,10 +74,22 @@ class GenerateTranscriptView(APIView):
         
         triggered_count = 0
         for r in recordings:
-            process_transcription.delay(r.id, "Recording")
+            try:
+                process_transcription.delay(r.id, "Recording")
+            except Exception:
+                try:
+                    process_transcription(r.id, "Recording")
+                except Exception as e:
+                    print(f"Error processing transcription for Recording {r.id}: {e}")
             triggered_count += 1
         for mr in meeting_recordings:
-            process_transcription.delay(mr.id, "MeetingRecording")
+            try:
+                process_transcription.delay(mr.id, "MeetingRecording")
+            except Exception:
+                try:
+                    process_transcription(mr.id, "MeetingRecording")
+                except Exception as e:
+                    print(f"Error processing transcription for MeetingRecording {mr.id}: {e}")
             triggered_count += 1
             
         return Response(

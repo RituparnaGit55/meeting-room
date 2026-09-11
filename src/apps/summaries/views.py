@@ -58,7 +58,13 @@ class GenerateSummaryView(APIView):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        generate_meeting_summary.delay(meeting_id)
+        try:
+            generate_meeting_summary.delay(meeting_id)
+        except Exception:
+            try:
+                generate_meeting_summary(meeting_id)
+            except Exception as e:
+                print(f"Error generating summary for meeting {meeting_id}: {e}")
         return Response(
             {"message": "Summary generation triggered successfully."},
             status=status.HTTP_202_ACCEPTED
@@ -74,15 +80,18 @@ class MeetingNoteListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         meeting_id = self.kwargs.get("meeting_id")
-        # Verify user is a participant of this meeting
         meeting_ids = _get_user_meeting_ids(self.request.user)
-        if int(meeting_id) not in meeting_ids:
+        try:
+            mid = int(meeting_id)
+            if mid not in meeting_ids:
+                return MeetingNote.objects.none()
+            note_type = self.request.query_params.get("type")
+            qs = MeetingNote.objects.filter(meeting_id=mid)
+            if note_type:
+                qs = qs.filter(note_type=note_type.upper())
+            return qs
+        except (ValueError, TypeError):
             return MeetingNote.objects.none()
-        note_type = self.request.query_params.get("type")
-        qs = MeetingNote.objects.filter(meeting_id=meeting_id)
-        if note_type:
-            qs = qs.filter(note_type=note_type.upper())
-        return qs
 
     def perform_create(self, serializer):
         serializer.save(

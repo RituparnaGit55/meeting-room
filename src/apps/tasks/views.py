@@ -49,8 +49,11 @@ class MeetingTaskListView(generics.ListAPIView):
 
     def get_queryset(self):
         meeting_id = self.kwargs.get("meeting_id")
-        # Verify user is a participant
         meeting_ids = _get_user_meeting_ids(self.request.user)
-        if int(meeting_id) not in meeting_ids:
+        try:
+            mid = int(meeting_id)
+            if mid not in meeting_ids:
+                return Task.objects.none()
+            return Task.objects.filter(meeting_id=mid).order_by("-created_at")
+        except (ValueError, TypeError):
             return Task.objects.none()
-        return Task.objects.filter(meeting_id=meeting_id).order_by("-created_at")

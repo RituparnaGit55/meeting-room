@@ -2,8 +2,6 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
-# C extensions
 *.so
 
 # Distribution / packaging
@@ -27,34 +25,52 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-# Django stuff:
+# Django & Database
 *.log
+server_log.txt
+logs/
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
+*.sqlite3
+*.sqlite3-journal
+*.sqlite
+src/db.sqlite3
 
-# Environment variables
+# Environment variables & secrets
 .env
 .env.local
 .env.*.local
+.env.development
+.env.production
+!.env.example
 
 # Virtual Environment
 venv/
 env/
 ENV/
-.venv
+.venv/
 
-# Static files
+# Static files & Media uploads
 staticfiles/
+src/staticfiles/
 media/
+src/media/
 
-# IDE
+# IDE & Editors
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.project
+.settings/
 
-# OS files
+# OS generated files
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# Scratch / Temporary files
+scratch/
+

@@ -60,10 +60,12 @@ class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
 
     def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         try:
             result = UserService.login_user(
-                request.data["email"],
-                request.data["password"]
+                serializer.validated_data["email"],
+                serializer.validated_data["password"]
             )
             return Response({
                 "access": result["access"],
@@ -79,7 +81,10 @@ class RefreshTokenView(generics.GenericAPIView):
 
     def post(self, request):
         try:
-            refresh = RefreshToken(request.data["refresh"])
+            refresh_token = request.data.get("refresh") if isinstance(request.data, dict) else None
+            if not refresh_token:
+                return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            refresh = RefreshToken(refresh_token)
             return Response({
                 "access": str(refresh.access_token),
             })
@@ -92,7 +97,10 @@ class LogoutView(generics.GenericAPIView):
 
     def post(self, request):
         try:
-            UserService.logout_user(request.data["refresh"])
+            refresh_token = request.data.get("refresh") if isinstance(request.data, dict) else None
+            if not refresh_token:
+                return Response({"error": "Refresh token is required"}, status=status.HTTP_400_BAD_REQUEST)
+            UserService.logout_user(refresh_token)
             return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)

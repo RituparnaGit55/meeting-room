@@ -6,6 +6,8 @@ from apps.accounts.models import User
 
 class Meeting(models.Model):
     objects = models.Manager()
+    participants: models.QuerySet  # Type hint for reverse ForeignKey relation
+    meeting_recordings: models.QuerySet  # Type hint for reverse ForeignKey relation
 
     TYPE_CHOICES = [
         ("INSTANT", "Instant Meeting"),
