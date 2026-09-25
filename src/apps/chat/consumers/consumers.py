@@ -19,17 +19,28 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code=1000):
         await self.channel_layer.group_discard(
             self.chat_group_name,
             self.channel_name
         )
 
-    async def receive(self, text_data):
+    async def receive(self, text_data=None, bytes_data=None):
+        if not text_data:
+            return
         data = json.loads(text_data)
         action = data.get("action")
         
         if action == "chat_message":
+            content = data.get("content", "")
+            if content and await self.is_message_restricted(content):
+                await self.send(text_data=json.dumps({
+                    "action": "restricted_keyword_detected",
+                    "error": "Restricted Keyword Detected",
+                    "message": "This message contains a restricted keyword or phrase that is not allowed in this meeting."
+                }))
+                return
+
             # Save message to DB
             msg_data = await self.save_message(data)
             
@@ -42,6 +53,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     "message": msg_data
                 }
             )
+
+    @database_sync_to_async
+    def is_message_restricted(self, content):
+        from apps.meetings.services import check_text_against_meeting_keywords
+        is_restricted, _ = check_text_against_meeting_keywords(self.meeting_id, content)
+        return is_restricted
+
 
     async def chat_message(self, event):
         message = event["message"]
@@ -71,9 +89,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
         # Don't create DB object if it's already created via file upload view (which might pass message_id)
         message_id = data.get("message_id")
         
+        msg = None
         if message_id:
             msg = Message.objects.filter(id=message_id).first()
-        else:
+        if not msg:
             msg = Message.objects.create(
                 meeting=meeting,
                 user=user,
@@ -84,7 +103,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             )
             
         return {
-            "id": msg.id,
+            "id": msg.id if msg else None,
             "sender_id": user.id if user else None,
             "sender_name": sender_name or (user.first_name if user else "Guest"),
             "receiver_id": receiver.id if receiver else None,
@@ -93,5 +112,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "file_url": file_url,
             "file_type": file_type,
             "file_name": file_name,
-            "timestamp": msg.timestamp.isoformat()
+            "timestamp": msg.timestamp.isoformat() if (msg and hasattr(msg, 'timestamp') and msg.timestamp) else ""
         }
+

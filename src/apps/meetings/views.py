@@ -10,15 +10,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from apps.accounts.models import User
-from .models import Meeting, MeetingParticipant, MeetingRecording
+from apps.accounts.permissions import IsAdmin
+from .models import Meeting, MeetingParticipant, MeetingRecording, RestrictedKeyword
 from .serializers import (
     MeetingSerializer, CreateMeetingSerializer,
     MeetingParticipantSerializer, JoinMeetingSerializer,
-    MeetingRecordingSerializer
+    MeetingRecordingSerializer, RestrictedKeywordSerializer
 )
 from .services.meeting_service import MeetingService, MeetingParticipantService
+from .services import check_text_against_meeting_keywords, has_active_restricted_keywords
 from .repositories.meeting_repository import MeetingRepository, MeetingParticipantRepository
 from .permissions import IsMeetingHost, IsMeetingParticipant
+
 
 
 class MeetingViewSet(viewsets.ModelViewSet):
@@ -311,6 +314,7 @@ class MeetingRoomView(LoginRequiredMixin, TemplateView):
         else:
             context['participants'] = []
             
+        context['has_restricted_keywords'] = has_active_restricted_keywords(room_code)
         return context
 
 
@@ -332,3 +336,53 @@ class MyMeetingsView(LoginRequiredMixin, TemplateView):
         meetings = (Meeting.objects.filter(host=user) | Meeting.objects.filter(participants__user=user)).distinct()
         context['recordings'] = MeetingRecording.objects.filter(meeting__in=meetings).distinct().order_by('-created_at')
         return context
+
+
+class RestrictedKeywordListCreateAPIView(generics.ListCreateAPIView):
+    """Admin API endpoint for listing and creating restricted keywords."""
+    permission_classes = [IsAdmin]
+    serializer_class = RestrictedKeywordSerializer
+    queryset = RestrictedKeyword.objects.all()
+
+    def get_queryset(self):
+        qs = RestrictedKeyword.objects.select_related('meeting', 'created_by').all()
+        meeting_id = self.request.query_params.get('meeting')
+        if meeting_id:
+            qs = qs.filter(meeting_id=meeting_id)
+        return qs
+
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+
+
+class RestrictedKeywordDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """Admin API endpoint for retrieving, updating, or deleting a restricted keyword."""
+    permission_classes = [IsAdmin]
+    serializer_class = RestrictedKeywordSerializer
+    queryset = RestrictedKeyword.objects.all()
+
+
+class CheckMeetingKeywordAPIView(APIView):
+    """
+    Public/Participant API for checking meeting restrictions.
+    GET: Checks if active restrictions exist for a given meeting.
+    POST: Checks a text string against active restrictions for a given meeting.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, meeting_identifier):
+        has_restrictions = has_active_restricted_keywords(meeting_identifier)
+        return Response({
+            "has_active_restrictions": has_restrictions,
+            "has_restricted_keywords": has_restrictions
+        })
+
+    def post(self, request, meeting_identifier):
+        text = request.data.get("text") or request.data.get("content") or ""
+        is_restricted, matched = check_text_against_meeting_keywords(meeting_identifier, text)
+        return Response({
+            "is_restricted": is_restricted,
+            "matched_keyword": matched if is_restricted else None,
+            "message": "This message contains a restricted keyword or phrase that is not allowed in this meeting." if is_restricted else "Content permitted."
+        })
+

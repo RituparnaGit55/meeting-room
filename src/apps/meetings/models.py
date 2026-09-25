@@ -8,6 +8,7 @@ class Meeting(models.Model):
     objects = models.Manager()
     participants: models.QuerySet  # Type hint for reverse ForeignKey relation
     meeting_recordings: models.QuerySet  # Type hint for reverse ForeignKey relation
+    restricted_keywords: models.QuerySet  # Type hint for reverse ForeignKey relation
 
     TYPE_CHOICES = [
         ("INSTANT", "Instant Meeting"),
@@ -126,3 +127,27 @@ class MeetingRecording(models.Model):
 
     def __str__(self):
         return f"Recording ({self.recording_type}) for {self.meeting.title} at {self.created_at}"
+
+
+class RestrictedKeyword(models.Model):
+    objects = models.Manager()
+
+    STATUS_CHOICES = [
+        ("ENABLED", "Enabled"),
+        ("DISABLED", "Disabled"),
+    ]
+
+    meeting = models.ForeignKey(Meeting, on_delete=models.CASCADE, related_name="restricted_keywords")
+    keyword = models.CharField(max_length=255)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="ENABLED")
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="created_restricted_keywords")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        unique_together = ["meeting", "keyword"]
+
+    def __str__(self):
+        return f"{self.meeting.title} - {self.keyword} ({self.status})"
+

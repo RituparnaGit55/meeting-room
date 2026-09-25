@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Meeting, MeetingParticipant
+from .models import Meeting, MeetingParticipant, RestrictedKeyword
 
 
 @admin.register(Meeting)
@@ -15,3 +15,11 @@ class MeetingParticipantAdmin(admin.ModelAdmin):
     list_display = ("meeting", "user", "guest_name", "role", "status", "joined_at")
     list_filter = ("role", "status", "joined_at")
     search_fields = ("meeting__title", "user__email", "guest_name")
+
+
+@admin.register(RestrictedKeyword)
+class RestrictedKeywordAdmin(admin.ModelAdmin):
+    list_display = ("meeting", "keyword", "status", "created_by", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("meeting__title", "meeting__room_code", "keyword")
+

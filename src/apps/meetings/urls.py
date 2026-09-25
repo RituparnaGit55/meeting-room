@@ -11,7 +11,12 @@ urlpatterns = [
     path('api/join/', views.JoinMeetingAPIView.as_view(), name='join-meeting-api'),
     path('api/recordings/upload/', views.UploadRecordingView.as_view(), name='upload-recording-api'),
     path('api/recordings/<int:pk>/delete/', views.DeleteRecordingView.as_view(), name='delete-recording-api'),
+    path('api/restricted-keywords/', views.RestrictedKeywordListCreateAPIView.as_view(), name='restricted-keyword-list-create'),
+    path('api/restricted-keywords/<int:pk>/', views.RestrictedKeywordDetailAPIView.as_view(), name='restricted-keyword-detail'),
+    path('api/<str:meeting_identifier>/restricted-keywords/check/', views.CheckMeetingKeywordAPIView.as_view(), name='check-meeting-restrictions'),
+    path('api/<str:meeting_identifier>/check-keyword/', views.CheckMeetingKeywordAPIView.as_view(), name='check-text-keyword'),
     path('api/', include(router.urls)),
+
 
     # Web URLs
     path('dashboard/', views.MeetingDashboardView.as_view(), name='meeting-dashboard'),

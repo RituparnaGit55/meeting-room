@@ -44,7 +44,11 @@
                 <span>Room Management</span>
             </a>
 
-            <div class="text-uppercase text-muted extra-small fw-bold px-3 mt-4 mb-2 tracking-wider">System & Data</div>
+            <div class="text-uppercase text-muted extra-small fw-bold px-3 mt-4 mb-2 tracking-wider">System & Policy</div>
+            <a onclick="switchTab('keywords')" class="admin-nav-item" id="nav-keywords">
+                <i class="bi bi-shield-slash-fill"></i>
+                <span>Restricted Keywords</span>
+            </a>
             <a onclick="switchTab('analytics')" class="admin-nav-item" id="nav-analytics">
                 <i class="bi bi-bar-chart-line-fill"></i>
                 <span>Analytics</span>
@@ -57,6 +61,7 @@
                 <i class="bi bi-gear-wide-connected"></i>
                 <span>System Settings</span>
             </a>
+
 
             <div class="text-uppercase text-muted extra-small fw-bold px-3 mt-4 mb-2 tracking-wider">Account</div>
             <a href="{% url 'profile' %}" class="admin-nav-item">
@@ -668,10 +673,166 @@
             </div>
         </div>
 
+        <!-- SECTION 8: RESTRICTED KEYWORDS TAB -->
+        <div class="admin-tab-section" id="section-keywords">
+            <!-- Add Restricted Keyword Card -->
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="fw-bold text-white mb-0"><i class="bi bi-shield-plus me-2 text-warning"></i>Add Restricted Keyword</h5>
+                    <span class="badge badge-manager rounded-pill px-3 py-1">Meeting-Scoped</span>
+                </div>
+                <p class="text-muted small mb-4">Associate a restricted term or phrase with a specific meeting. The restriction will only apply to the selected meeting.</p>
+                
+                <form id="createKeywordForm" onsubmit="event.preventDefault(); submitCreateKeyword();">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label text-muted extra-small fw-bold text-uppercase tracking-wider">Select Meeting</label>
+                            <select id="keywordMeetingSelect" class="admin-form-control" required>
+                                <option value="">-- Choose Meeting --</option>
+                                {% for m in meetings_list %}
+                                    <option value="{{ m.id }}">Meeting #{{ m.id }} - {{ m.title }} (Code: {{ m.room_code }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label text-muted extra-small fw-bold text-uppercase tracking-wider">Restricted Keyword / Phrase</label>
+                            <input type="text" id="keywordTextInput" class="admin-form-control" placeholder="e.g. phone number, confidential" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted extra-small fw-bold text-uppercase tracking-wider">Status</label>
+                            <div class="d-flex gap-2">
+                                <select id="keywordStatusSelect" class="admin-form-control">
+                                    <option value="ENABLED">Enabled</option>
+                                    <option value="DISABLED">Disabled</option>
+                                </select>
+                                <button type="submit" class="btn btn-admin-primary btn-sm px-3 text-nowrap">
+                                    <i class="bi bi-plus-lg me-1"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Restricted Keywords Directory Card -->
+            <div class="admin-glass-card p-4 mb-4">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <h5 class="fw-bold text-white mb-1"><i class="bi bi-shield-slash me-2 text-danger"></i>Restricted Keywords Directory</h5>
+                        <p class="text-muted small mb-0">List of all active and disabled meeting-specific keyword restrictions.</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <select id="filterKeywordMeeting" class="admin-form-control py-1 px-3 text-sm" onchange="filterKeywordsTable()">
+                            <option value="all">All Meetings</option>
+                            {% for m in meetings_list %}
+                                <option value="{{ m.id }}">Meeting #{{ m.id }} - {{ m.title }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="keywordSearchInput" class="admin-form-control py-1 px-3 text-sm" placeholder="Search keyword or meeting..." onkeyup="filterKeywordsTable()">
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-dark table-hover table-dark-custom align-middle mb-0" id="keywordsTable">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Meeting</th>
+                                <th>Restricted Keyword / Phrase</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Date Added</th>
+                                <th class="text-end pe-3">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for rk in restricted_keywords_list %}
+                                <tr id="keyword-row-{{ rk.id }}" data-meeting-id="{{ rk.meeting.id }}">
+                                    <td class="ps-3">
+                                        <div class="fw-bold text-white small">Meeting #{{ rk.meeting.id }} - {{ rk.meeting.title }}</div>
+                                        <div class="text-muted extra-small">Code: <code class="text-primary">{{ rk.meeting.room_code }}</code></div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger bg-opacity-20 text-danger border border-danger border-opacity-30 px-3 py-1.5 fs-6 font-monospace">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ rk.keyword }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span id="keyword-status-badge-{{ rk.id }}" class="badge {% if rk.status == 'ENABLED' %}badge-active{% else %}badge-disabled{% endif %} rounded-pill px-2.5 py-1 extra-small">
+                                            {% if rk.status == 'ENABLED' %}Enabled{% else %}Disabled{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="text-light small">{{ rk.created_by.email|default:"System Admin" }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-muted extra-small">{{ rk.created_at|date:"M d, Y H:i" }}</span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <div class="btn-group btn-group-sm">
+                                            <button onclick="openEditKeywordModal('{{ rk.id }}', '{{ rk.meeting.id }}', '{{ rk.keyword|escapejs }}', '{{ rk.status }}')" class="btn btn-outline-secondary btn-sm text-light" title="Edit Keyword">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </button>
+                                            <button id="toggle-kw-btn-{{ rk.id }}" onclick="toggleKeywordStatus('{{ rk.id }}')" class="btn {% if rk.status == 'ENABLED' %}btn-outline-warning{% else %}btn-outline-success{% endif %} btn-sm" title="Toggle Status">
+                                                {% if rk.status == 'ENABLED' %}<i class="bi bi-slash-circle"></i> Disable{% else %}<i class="bi bi-check-circle"></i> Enable{% endif %}
+                                            </button>
+                                            <button onclick="deleteKeyword('{{ rk.id }}', '{{ rk.keyword|escapejs }}')" class="btn btn-outline-danger btn-sm" title="Delete Restriction">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">No restricted keywords configured yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
-<!-- Modal: Change User Role -->
+<!-- Modal: Edit Restricted Keyword -->
+<div class="modal fade" id="editKeywordModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content border-0 rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
+            <div class="modal-header border-secondary border-opacity-25 p-4">
+                <h6 class="modal-title fw-bold text-white mb-0"><i class="bi bi-pencil-square me-2 text-primary"></i>Edit Restricted Keyword</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="hidden" id="editKeywordId">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Meeting</label>
+                    <select id="editKeywordMeetingSelect" class="admin-form-control">
+                        {% for m in meetings_list %}
+                            <option value="{{ m.id }}">Meeting #{{ m.id }} - {{ m.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Restricted Keyword / Phrase</label>
+                    <input type="text" id="editKeywordTextInput" class="admin-form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold">Status</label>
+                    <select id="editKeywordStatusSelect" class="admin-form-control">
+                        <option value="ENABLED">Enabled</option>
+                        <option value="DISABLED">Disabled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer border-secondary border-opacity-25 p-3">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-admin-primary btn-sm" onclick="submitEditKeyword()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="modal fade" id="changeRoleModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
         <div class="modal-content border-0 rounded-4 overflow-hidden" style="background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.15)!important; color: #ffffff;">
@@ -744,10 +905,12 @@
         'meetings': { title: 'Meeting & Room Controls', sub: 'Monitor active WebRTC peer connections, room bandwidth, and scheduled calls.' },
         'users': { title: 'User Account Directory', sub: 'Manage permissions, active statuses, and administrative roles.' },
         'rooms': { title: 'Active Meeting Rooms', sub: 'Real-time monitoring of WebRTC room instances and waiting room configurations.' },
+        'keywords': { title: 'Restricted Keywords Policy', sub: 'Define and enforce meeting-specific restricted terms and communication policies.' },
         'analytics': { title: 'System Analytics & Media', sub: 'Disk storage utilization and API request performance metrics.' },
         'reports': { title: 'Reports & Data Exports', sub: 'Audit system data and download full CSV reports.' },
         'settings': { title: 'System Environment Settings', sub: 'Integrations status, security headers, and database parameters.' }
     };
+
 
     function switchTab(tabId) {
         if (!headings[tabId]) tabId = 'overview';
@@ -1022,5 +1185,158 @@
             }
         });
     }
+
+    // Restricted Keywords AJAX Functions
+    function submitCreateKeyword() {
+        const meetingId = document.getElementById('keywordMeetingSelect').value;
+        const keyword = document.getElementById('keywordTextInput').value.trim();
+        const status = document.getElementById('keywordStatusSelect').value;
+
+        if (!meetingId || !keyword) {
+            showToast('Validation Error', 'Please select a meeting and enter keyword text', 'warning');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('action', 'create_keyword');
+        formData.append('meeting_id', meetingId);
+        formData.append('keyword', keyword);
+        formData.append('status', status);
+
+        fetch("{% url 'admin-keyword-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Restriction Added', data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast('Error', data.error || 'Failed to add restricted keyword', 'danger');
+            }
+        });
+    }
+
+    function toggleKeywordStatus(keywordId) {
+        const btn = document.getElementById('toggle-kw-btn-' + keywordId);
+        const formData = new FormData();
+        formData.append('action', 'toggle_status');
+        formData.append('keyword_id', keywordId);
+
+        fetch("{% url 'admin-keyword-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('Status Updated', data.message, 'success');
+                const badge = document.getElementById('keyword-status-badge-' + keywordId);
+                if (data.status === 'ENABLED') {
+                    badge.className = 'badge badge-active rounded-pill px-2.5 py-1 extra-small';
+                    badge.textContent = 'Enabled';
+                    btn.className = 'btn btn-outline-warning btn-sm';
+                    btn.innerHTML = '<i class="bi bi-slash-circle"></i> Disable';
+                } else {
+                    badge.className = 'badge badge-disabled rounded-pill px-2.5 py-1 extra-small';
+                    badge.textContent = 'Disabled';
+                    btn.className = 'btn btn-outline-success btn-sm';
+                    btn.innerHTML = '<i class="bi bi-check-circle"></i> Enable';
+                }
+            } else {
+                showToast('Error', data.error || 'Failed to update status', 'danger');
+            }
+        });
+    }
+
+    function openEditKeywordModal(keywordId, meetingId, keyword, status) {
+        document.getElementById('editKeywordId').value = keywordId;
+        document.getElementById('editKeywordMeetingSelect').value = meetingId;
+        document.getElementById('editKeywordTextInput').value = keyword;
+        document.getElementById('editKeywordStatusSelect').value = status;
+        const modal = new bootstrap.Modal(document.getElementById('editKeywordModal'));
+        modal.show();
+    }
+
+    function submitEditKeyword() {
+        const keywordId = document.getElementById('editKeywordId').value;
+        const meetingId = document.getElementById('editKeywordMeetingSelect').value;
+        const keyword = document.getElementById('editKeywordTextInput').value.trim();
+        const status = document.getElementById('editKeywordStatusSelect').value;
+
+        const formData = new FormData();
+        formData.append('action', 'update_keyword');
+        formData.append('keyword_id', keywordId);
+        formData.append('meeting_id', meetingId);
+        formData.append('keyword', keyword);
+        formData.append('status', status);
+
+        fetch("{% url 'admin-keyword-action' %}", {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            const modalEl = document.getElementById('editKeywordModal');
+            const bsModal = bootstrap.Modal.getInstance(modalEl);
+            if (bsModal) bsModal.hide();
+
+            if (data.success) {
+                showToast('Keyword Updated', data.message, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showToast('Error', data.error || 'Failed to update keyword', 'danger');
+            }
+        });
+    }
+
+    function deleteKeyword(keywordId, keywordText) {
+        promptConfirmDelete({
+            title: 'Delete Restricted Keyword',
+            message: `Are you sure you want to delete restricted keyword "${keywordText}"?`,
+            onConfirm: () => {
+                const formData = new FormData();
+                formData.append('action', 'delete_keyword');
+                formData.append('keyword_id', keywordId);
+
+                fetch("{% url 'admin-keyword-action' %}", {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') },
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Keyword Deleted', data.message, 'success');
+                        const row = document.getElementById('keyword-row-' + keywordId);
+                        if (row) row.remove();
+                    } else {
+                        showToast('Error', data.error || 'Failed to delete keyword', 'danger');
+                    }
+                });
+            }
+        });
+    }
+
+    function filterKeywordsTable() {
+        const meetingFilter = document.getElementById('filterKeywordMeeting').value;
+        const searchInput = document.getElementById('keywordSearchInput').value.toLowerCase();
+        const rows = document.querySelectorAll('#keywordsTable tbody tr');
+
+        rows.forEach(row => {
+            const rowMeetingId = row.getAttribute('data-meeting-id');
+            const rowText = row.textContent.toLowerCase();
+
+            const matchesMeeting = (meetingFilter === 'all' || rowMeetingId === meetingFilter);
+            const matchesSearch = rowText.includes(searchInput);
+
+            row.style.display = (matchesMeeting && matchesSearch) ? '' : 'none';
+        });
+    }
 </script>
 {% endblock %}
+

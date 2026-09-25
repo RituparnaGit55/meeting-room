@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.utils import timezone
 from apps.accounts.models import User
 from apps.accounts.serializers import UserSerializer
-from .models import Meeting, MeetingParticipant, MeetingRecording
+from .models import Meeting, MeetingParticipant, MeetingRecording, RestrictedKeyword
 
 
 class MeetingParticipantSerializer(serializers.ModelSerializer):
@@ -60,3 +60,15 @@ class MeetingRecordingSerializer(serializers.ModelSerializer):
     class Meta:
         model = MeetingRecording
         fields = '__all__'
+
+
+class RestrictedKeywordSerializer(serializers.ModelSerializer):
+    meeting_title = serializers.ReadOnlyField(source='meeting.title')
+    meeting_room_code = serializers.ReadOnlyField(source='meeting.room_code')
+    created_by_email = serializers.ReadOnlyField(source='created_by.email')
+
+    class Meta:
+        model = RestrictedKeyword
+        fields = '__all__'
+        read_only_fields = ['created_by', 'created_at', 'updated_at']
+

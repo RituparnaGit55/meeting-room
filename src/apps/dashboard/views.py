@@ -8,7 +8,7 @@ from django.views.generic import TemplateView
 from django.db.models import Sum, Count
 from django.shortcuts import get_object_or_404, redirect
 
-from apps.meetings.models import Meeting, MeetingParticipant, MeetingRecording
+from apps.meetings.models import Meeting, MeetingParticipant, MeetingRecording, RestrictedKeyword
 from apps.recordings.models import Recording
 from apps.transcripts.models import Transcript
 from apps.summaries.models import Summary
@@ -94,7 +94,11 @@ class AdminDashboardPageView(AdminRequiredMixin, TemplateView):
         context["recordings_list"] = Recording.objects.select_related('user').order_by('-created_at')[:20]
         context["transcripts_list"] = Transcript.objects.select_related('meeting').order_by('-created_at')[:20]
         
+        context["restricted_keywords_list"] = RestrictedKeyword.objects.select_related('meeting', 'created_by').order_by('-created_at')
+        context["total_restricted_keywords"] = RestrictedKeyword.objects.count()
+
         return context
+
 
 
 class AdminUserActionView(AdminRequiredMixin, View):
@@ -166,6 +170,70 @@ class AdminMeetingActionView(AdminRequiredMixin, View):
             return JsonResponse({"success": True, "message": f"Meeting '{title}' deleted successfully."})
             
         return JsonResponse({"success": False, "error": "Invalid action."}, status=400)
+
+
+class AdminRestrictedKeywordActionView(AdminRequiredMixin, View):
+    """API view for admin restricted keyword management actions."""
+    def post(self, request, *args, **kwargs):
+        action = request.POST.get("action")
+
+        if action == "create_keyword":
+            meeting_id = request.POST.get("meeting_id")
+            keyword_text = request.POST.get("keyword", "").strip()
+            status = request.POST.get("status", "ENABLED")
+
+            if not meeting_id or not keyword_text:
+                return JsonResponse({"success": False, "error": "Meeting selection and restricted keyword text are required."}, status=400)
+
+            meeting = get_object_or_404(Meeting, pk=meeting_id)
+            if RestrictedKeyword.objects.filter(meeting=meeting, keyword__iexact=keyword_text).exists():
+                return JsonResponse({"success": False, "error": f"The restricted keyword '{keyword_text}' is already configured for '{meeting.title}'."}, status=400)
+
+            rk = RestrictedKeyword.objects.create(
+                meeting=meeting,
+                keyword=keyword_text,
+                status=status if status in ["ENABLED", "DISABLED"] else "ENABLED",
+                created_by=request.user if request.user.is_authenticated else None
+            )
+            return JsonResponse({
+                "success": True,
+                "message": f"Restricted keyword '{rk.keyword}' added to Meeting #{meeting.id}.",
+                "id": rk.id
+            })
+
+        keyword_id = request.POST.get("keyword_id")
+        rk = get_object_or_404(RestrictedKeyword, pk=keyword_id)
+
+        if action == "toggle_status":
+            rk.status = "DISABLED" if rk.status == "ENABLED" else "ENABLED"
+            rk.save()
+            return JsonResponse({
+                "success": True,
+                "message": f"Restricted keyword status updated to {rk.status}.",
+                "status": rk.status
+            })
+
+        elif action == "update_keyword":
+            meeting_id = request.POST.get("meeting_id")
+            keyword_text = request.POST.get("keyword", "").strip()
+            status = request.POST.get("status", rk.status)
+
+            if meeting_id:
+                rk.meeting = get_object_or_404(Meeting, pk=meeting_id)
+            if keyword_text:
+                rk.keyword = keyword_text
+            if status in ["ENABLED", "DISABLED"]:
+                rk.status = status
+            rk.save()
+            return JsonResponse({"success": True, "message": f"Restricted keyword updated successfully."})
+
+        elif action == "delete_keyword":
+            kw = rk.keyword
+            rk.delete()
+            return JsonResponse({"success": True, "message": f"Restricted keyword '{kw}' deleted successfully."})
+
+        return JsonResponse({"success": False, "error": "Invalid action."}, status=400)
+
 
 
 class AdminExportReportView(AdminRequiredMixin, View):
