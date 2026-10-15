@@ -132,37 +132,37 @@ class MeetingParticipantViewSet(viewsets.ModelViewSet):
         return self.queryset.none()
 
     @action(detail=True, methods=['post'], permission_classes=[IsMeetingHost])
-    def admit(self, request, pk=None):
+    def admit(self, request, *args, **kwargs):
         participant = self.get_object()
         MeetingParticipantService.admit_from_waiting_room(participant)
         return Response({"message": "Participant admitted"}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], permission_classes=[IsMeetingHost])
-    def remove(self, request, pk=None):
+    def remove(self, request, *args, **kwargs):
         participant = self.get_object()
         MeetingParticipantService.remove_participant(participant)
         return Response({"message": "Participant removed"}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
-    def toggle_hand(self, request, pk=None):
+    def toggle_hand(self, request, *args, **kwargs):
         participant = self.get_object()
         participant = MeetingParticipantService.toggle_hand_raise(participant)
         return Response(MeetingParticipantSerializer(participant).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
-    def toggle_audio(self, request, pk=None):
+    def toggle_audio(self, request, *args, **kwargs):
         participant = self.get_object()
         participant = MeetingParticipantService.toggle_audio(participant)
         return Response(MeetingParticipantSerializer(participant).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
-    def toggle_video(self, request, pk=None):
+    def toggle_video(self, request, *args, **kwargs):
         participant = self.get_object()
         participant = MeetingParticipantService.toggle_video(participant)
         return Response(MeetingParticipantSerializer(participant).data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'])
-    def toggle_screen(self, request, pk=None):
+    def toggle_screen(self, request, *args, **kwargs):
         participant = self.get_object()
         participant = MeetingParticipantService.toggle_screen_share(participant)
         return Response(MeetingParticipantSerializer(participant).data, status=status.HTTP_200_OK)

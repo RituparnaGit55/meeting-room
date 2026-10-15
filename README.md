@@ -204,7 +204,7 @@ Refer to [.env.example](.env.example) for all available keys:
 ```bash
 py run_meetflow.py
 ```
-*Access the application at `http://127.0.0.1:8001/`*
+*Access the application at `http://127.0.0.1:8000/`*
 
 ### Option 2: Standard Django Command
 ```bash

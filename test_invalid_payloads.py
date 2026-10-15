@@ -152,65 +152,72 @@ test_cases = [
     },
 ]
 
-print("=" * 75)
-print("TESTING INVALID PAYLOADS & ERROR CODES Across MeetFlow APIs")
-print("=" * 75)
+def main():
+    print("=" * 75)
+    print("TESTING INVALID PAYLOADS & ERROR CODES Across MeetFlow APIs")
+    print("=" * 75)
 
-passed_count = 0
-failed_count = 0
+    passed_count = 0
+    failed_count = 0
 
-for test in test_cases:
-    url = cast(str, test["url"])
-    headers = cast(Dict[str, str], test.get("headers", {}))
-    body = cast(bytes, test["raw_data"])
-    method = cast(str, test["method"])
-    expected_codes = cast(List[int], test.get("expected_codes", [400]))
-    req = urllib.request.Request(url, data=body, headers=headers, method=method)
-    
-    try:
-        with urllib.request.urlopen(req) as resp:
-            status_code = resp.getcode()
-            response_text = resp.read().decode("utf-8")
+    for test in test_cases:
+        url = cast(str, test["url"])
+        headers = cast(Dict[str, str], test.get("headers", {}))
+        body = cast(bytes, test["raw_data"])
+        method = cast(str, test["method"])
+        expected_codes = cast(List[int], test.get("expected_codes", [400]))
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        
+        try:
+            with urllib.request.urlopen(req) as resp:
+                status_code = resp.getcode()
+                response_text = resp.read().decode("utf-8")
+                if status_code in expected_codes:
+                    print(f"[PASS] {test['name']}")
+                    print(f"       HTTP Status Code: {status_code}")
+                    print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
+                    passed_count += 1
+                else:
+                    print(f"[UNEXPECTED SUCCESS] {test['name']}")
+                    print(f"       Expected {expected_codes}, but got Status {status_code}")
+                    print(f"       Response: {response_text[:150]}")
+                    failed_count += 1
+                print("-" * 75)
+        except urllib.error.HTTPError as e:
+            status_code = e.code
+            try:
+                response_text = e.read().decode("utf-8")
+            except Exception:
+                response_text = ""
+                
             if status_code in expected_codes:
                 print(f"[PASS] {test['name']}")
                 print(f"       HTTP Status Code: {status_code}")
                 print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
                 passed_count += 1
+            elif status_code == 500:
+                print(f"[FAIL - 500 SERVER CRASH] {test['name']}")
+                print(f"       HTTP Status Code: 500 (Internal Server Error)")
+                print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
+                failed_count += 1
             else:
-                print(f"[UNEXPECTED SUCCESS] {test['name']}")
-                print(f"       Expected {expected_codes}, but got Status {status_code}")
-                print(f"       Response: {response_text[:150]}")
+                print(f"[FAIL] {test['name']}")
+                print(f"       Expected {expected_codes}, got HTTP Status Code: {status_code}")
+                print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
                 failed_count += 1
             print("-" * 75)
-    except urllib.error.HTTPError as e:
-        status_code = e.code
-        try:
-            response_text = e.read().decode("utf-8")
-        except Exception:
-            response_text = ""
-            
-        if status_code in expected_codes:
-            print(f"[PASS] {test['name']}")
-            print(f"       HTTP Status Code: {status_code}")
-            print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
-            passed_count += 1
-        elif status_code == 500:
-            print(f"[FAIL - 500 SERVER CRASH] {test['name']}")
-            print(f"       HTTP Status Code: 500 (Internal Server Error)")
-            print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
+        except Exception as e:
+            print(f"[ERROR] {test['name']} - Exception: {e}")
             failed_count += 1
-        else:
-            print(f"[FAIL] {test['name']}")
-            print(f"       Expected {expected_codes}, got HTTP Status Code: {status_code}")
-            print(f"       Response Snippet: {response_text[:150].replace('\n', ' ')}")
-            failed_count += 1
-        print("-" * 75)
-    except Exception as e:
-        print(f"[ERROR] {test['name']} - Exception: {e}")
-        failed_count += 1
-        print("-" * 75)
+            print("-" * 75)
 
-print("\n" + "=" * 75)
-print(f"TEST RESULTS SUMMARY: {passed_count} PASSED, {failed_count} FAILED out of {len(test_cases)} tests.")
-print("=" * 75)
+    print("\n" + "=" * 75)
+    print(f"TEST RESULTS SUMMARY: {passed_count} PASSED, {failed_count} FAILED out of {len(test_cases)} tests.")
+    print("=" * 75)
+    return 0 if failed_count == 0 else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
 

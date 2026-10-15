@@ -18,11 +18,11 @@ try:
     import django
     django.setup()
     
-    print("Starting Django development server on http://127.0.0.1:8001/")
+    print("Starting Django development server on http://127.0.0.1:8000/")
     from django.core.management import execute_from_command_line
     
-    # Run the server with noreload on port 8001
-    execute_from_command_line(["manage.py", "runserver", "127.0.0.1:8001", "--noreload"])
+    # Run the server with noreload on port 8000
+    execute_from_command_line(["manage.py", "runserver", "127.0.0.1:8000", "--noreload"])
     
 except Exception as e:
     print(f"ERROR: {str(e)}")

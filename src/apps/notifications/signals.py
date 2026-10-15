@@ -16,7 +16,12 @@ def schedule_meeting_reminder(sender, instance, created, **kwargs):
     if not created:
         return
 
-    if instance.start_time and instance.start_time > timezone.now():
+    start_time = instance.start_time
+    if isinstance(start_time, str):
+        from django.utils.dateparse import parse_datetime
+        start_time = parse_datetime(start_time)
+
+    if start_time and start_time > timezone.now():
         from .services import NotificationService
 
         NotificationService.create_notification(
@@ -25,7 +30,7 @@ def schedule_meeting_reminder(sender, instance, created, **kwargs):
             title=f"Upcoming: {instance.title}",
             message=(
                 f"Your meeting '{instance.title}' is scheduled for "
-                f"{instance.start_time.strftime('%b %d, %Y at %I:%M %p')}."
+                f"{start_time.strftime('%b %d, %Y at %I:%M %p')}."
             ),
             meeting=instance,
         )

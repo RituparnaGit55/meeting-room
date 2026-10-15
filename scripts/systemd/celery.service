@@ -1,0 +1,16 @@
+[Unit]
+Description=MeetFlow Celery Worker Service
+After=network.target redis.service
+
+[Service]
+Type=simple
+User=ubuntu
+Group=www-data
+WorkingDirectory=/home/ubuntu/meeting-room/src
+EnvironmentFile=/home/ubuntu/meeting-room/.env
+ExecStart=/home/ubuntu/meeting-room/venv/bin/celery -A config worker --loglevel=info
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -17,5 +17,5 @@ django.setup()
 from django.core.management import execute_from_command_line
 
 print("Starting MeetFlow server...")
-print("Open http://127.0.0.1:8001 in your browser!")
-execute_from_command_line(["manage.py", "runserver", "127.0.0.1:8001"])
+print("Open http://127.0.0.1:8000 in your browser!")
+execute_from_command_line(["manage.py", "runserver", "127.0.0.1:8000"])
